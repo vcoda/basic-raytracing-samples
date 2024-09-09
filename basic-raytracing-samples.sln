@@ -10,6 +10,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "framework", "framework\fram
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "magma", "third-party\magma\projects\vs\magma.vcxproj", "{8D9D4A3E-439A-4210-8879-259B20D992CA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01-triangle", "01-triangle\01-triangle.vcxproj", "{50E82F8F-9204-4728-B05D-DEB21635CA3D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8D9D4A3E-439A-4210-8879-259B20D992CA} = {8D9D4A3E-439A-4210-8879-259B20D992CA}
+		{1BC7FECA-4C79-4B0A-B018-6E341527B11E} = {1BC7FECA-4C79-4B0A-B018-6E341527B11E}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -18,12 +24,16 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{1BC7FECA-4C79-4B0A-B018-6E341527B11E}.Debug|x64.ActiveCfg = Debug|x64
 		{1BC7FECA-4C79-4B0A-B018-6E341527B11E}.Debug|x64.Build.0 = Debug|x64
-		{1BC7FECA-4C79-4B0A-B018-6E341527B11E}.Release|x64.ActiveCfg = Debug|x64
+		{1BC7FECA-4C79-4B0A-B018-6E341527B11E}.Release|x64.ActiveCfg = Release|x64
 		{1BC7FECA-4C79-4B0A-B018-6E341527B11E}.Release|x64.Build.0 = Release|x64
 		{8D9D4A3E-439A-4210-8879-259B20D992CA}.Debug|x64.ActiveCfg = Debug|x64
 		{8D9D4A3E-439A-4210-8879-259B20D992CA}.Debug|x64.Build.0 = Debug|x64
-		{8D9D4A3E-439A-4210-8879-259B20D992CA}.Release|x64.ActiveCfg = Debug|x64
+		{8D9D4A3E-439A-4210-8879-259B20D992CA}.Release|x64.ActiveCfg = Release|x64
 		{8D9D4A3E-439A-4210-8879-259B20D992CA}.Release|x64.Build.0 = Release|x64
+		{50E82F8F-9204-4728-B05D-DEB21635CA3D}.Debug|x64.ActiveCfg = Debug|x64
+		{50E82F8F-9204-4728-B05D-DEB21635CA3D}.Debug|x64.Build.0 = Debug|x64
+		{50E82F8F-9204-4728-B05D-DEB21635CA3D}.Release|x64.ActiveCfg = Release|x64
+		{50E82F8F-9204-4728-B05D-DEB21635CA3D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
