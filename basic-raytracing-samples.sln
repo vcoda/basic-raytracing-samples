@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "framework", "framework\framework.vcxproj", "{1BC7FECA-4C79-4B0A-B018-6E341527B11E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8D9D4A3E-439A-4210-8879-259B20D992CA} = {8D9D4A3E-439A-4210-8879-259B20D992CA}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "magma", "third-party\magma\projects\vs\magma.vcxproj", "{8D9D4A3E-439A-4210-8879-259B20D992CA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1BC7FECA-4C79-4B0A-B018-6E341527B11E}.Debug|x64.ActiveCfg = Debug|x64
+		{1BC7FECA-4C79-4B0A-B018-6E341527B11E}.Debug|x64.Build.0 = Debug|x64
+		{1BC7FECA-4C79-4B0A-B018-6E341527B11E}.Release|x64.ActiveCfg = Debug|x64
+		{1BC7FECA-4C79-4B0A-B018-6E341527B11E}.Release|x64.Build.0 = Release|x64
+		{8D9D4A3E-439A-4210-8879-259B20D992CA}.Debug|x64.ActiveCfg = Debug|x64
+		{8D9D4A3E-439A-4210-8879-259B20D992CA}.Debug|x64.Build.0 = Debug|x64
+		{8D9D4A3E-439A-4210-8879-259B20D992CA}.Release|x64.ActiveCfg = Debug|x64
+		{8D9D4A3E-439A-4210-8879-259B20D992CA}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F88C6098-C784-4B80-80B6-77704379AAA1}
+	EndGlobalSection
+EndGlobal
