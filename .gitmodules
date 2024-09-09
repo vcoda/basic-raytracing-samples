@@ -6,3 +6,6 @@
 	path = third-party/rapid
 	url = https://github.com/vcoda/rapid.git
 	branch = master
+[submodule "third-party/tinyobjloader"]
+	path = third-party/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader.git
