@@ -16,6 +16,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01-triangle", "01-triangle\
 		{1BC7FECA-4C79-4B0A-B018-6E341527B11E} = {1BC7FECA-4C79-4B0A-B018-6E341527B11E}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "02-transform", "02-transform\02-transform.vcxproj", "{E947AD0C-32C0-46D3-A6D3-C7F6F36CCB86}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1BC7FECA-4C79-4B0A-B018-6E341527B11E} = {1BC7FECA-4C79-4B0A-B018-6E341527B11E}
+		{8D9D4A3E-439A-4210-8879-259B20D992CA} = {8D9D4A3E-439A-4210-8879-259B20D992CA}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -34,6 +40,10 @@ Global
 		{50E82F8F-9204-4728-B05D-DEB21635CA3D}.Debug|x64.Build.0 = Debug|x64
 		{50E82F8F-9204-4728-B05D-DEB21635CA3D}.Release|x64.ActiveCfg = Release|x64
 		{50E82F8F-9204-4728-B05D-DEB21635CA3D}.Release|x64.Build.0 = Release|x64
+		{E947AD0C-32C0-46D3-A6D3-C7F6F36CCB86}.Debug|x64.ActiveCfg = Debug|x64
+		{E947AD0C-32C0-46D3-A6D3-C7F6F36CCB86}.Debug|x64.Build.0 = Debug|x64
+		{E947AD0C-32C0-46D3-A6D3-C7F6F36CCB86}.Release|x64.ActiveCfg = Release|x64
+		{E947AD0C-32C0-46D3-A6D3-C7F6F36CCB86}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
