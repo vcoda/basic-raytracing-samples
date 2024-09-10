@@ -4,12 +4,12 @@
 
 To clone this repository with external submodules:
 ```
-git clone --recursive https://github.com/vcoda/basic-graphics-samples.git
+git clone --recursive https://github.com/vcoda/basic-raytracing-samples.git
 ``` 
 or clone this repository only and update submodules manually:
 ```
-git clone https://github.com/vcoda/basic-graphics-samples.git
-cd basic-graphics-samples
+git clone https://github.com/vcoda/basic-raytracing-samples.git
+cd basic-raytracing-samples
 git submodule update --init --recursive
 ``` 
 
@@ -118,26 +118,14 @@ make -j<N>
 where N is the number of threads to run with multi-threaded compilation. First, magma and quadric libraries will be built, then samples.
 To build a particular sample, you can build dependencies separately, then go to the sample's directory and run make script:
 ```
-cd 01-clear
+cd 01-triangle
 make
-./01-clear
+./01-triangle
 ```
 There is debug build by default. For release build, set DEBUG variable to 0, e. g.:
 ```
 make magma DEBUG=0 -j<N>
 ```
-
-## Android
-
-* [Android Studio](https://developer.android.com/studio/index.html)<br>
-* [Android NDK](https://github.com/android-ndk/ndk/wiki)<br>
-TODO
-
-## macOS and iOS
-
-* [XCode](https://developer.apple.com/xcode/)<br>
-* [MoltenVK](https://github.com/KhronosGroup/MoltenVK)<br>
-TODO
 
 ## Samples
 
