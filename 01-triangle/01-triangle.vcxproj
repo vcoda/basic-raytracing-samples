@@ -50,7 +50,7 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;..\third-party</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4100;4146;4305;4324;4458;4838</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4324;4458</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -69,7 +69,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;..\third-party</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4100;4146;4305;4324;4458;4838</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4189;4324;4458</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
