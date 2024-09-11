@@ -134,7 +134,12 @@ make magma DEBUG=0 -j<N>
 This very first sample renders a triangle using hardware ray-tracing instead of conventional rasterization.
 It shows how to allocate top- and bottom-level acceleration structures, build them on device, and how to run 
 ray-tracing shader to find closest intersection of ray with geometry.
-<br><br><br>
+
+### [02 - Perspective transformation](02-transform/)
+<img src="./screenshots/02.png" height="128px" align="left">
+Calculates origin and direction of the ray using inverted view and projection matrices. Triangle's world transformation
+stored in the instance buffer bound to top-level acceleration structure. To apply transformation, acceleration structure 
+is updated every frame.
 
 ## Credits
 This framework uses a few third-party libraries:
