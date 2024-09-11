@@ -134,12 +134,23 @@ make magma DEBUG=0 -j<N>
 This very first sample renders a triangle using hardware ray-tracing instead of conventional rasterization.
 It shows how to allocate top- and bottom-level acceleration structures, build them on device, and how to run 
 ray-tracing shader to find closest intersection of ray with geometry.
+<br><br><br><br>
 
 ### [02 - Perspective transformation](02-transform/)
 <img src="./screenshots/02.png" height="128px" align="left">
 Calculates origin and direction of the ray using inverted view and projection matrices. Triangle's world transformation
 stored in the instance buffer bound to top-level acceleration structure. To apply transformation, acceleration structure 
 is updated every frame.
+<br><br><br><br>
+
+### [03 - Procedural intersection](03-procedural-intersection/)
+<img src="./screenshots/03.png" height="128px" align="left">
+Current hardware is able to trace rays only against triangles or AABBs. In case of a custom shape,
+a special intersection shader may be injected into pipeline. First, we define AABB that describes bounds of our shape. 
+Next, if intersection of ray and AABB is found, then intersection shader is invoked. This shader may compute intersection 
+programmatically with arbitrary shape like sphere, cylinder, cone, torus etc. In this example an optimized intersection 
+with a sphere is provided.
+<br><br><br><br>
 
 ## Credits
 This framework uses a few third-party libraries:
