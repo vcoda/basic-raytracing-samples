@@ -22,7 +22,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "02-transform", "02-transfor
 		{1BC7FECA-4C79-4B0A-B018-6E341527B11E} = {1BC7FECA-4C79-4B0A-B018-6E341527B11E}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "03-procedural-intersection", "C:\dev\basic-raytracing-samples\03-procedural-intersection\03-procedural-intersection.vcxproj", "{69A680CF-6600-4BD9-8134-46654BC5BEA8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "03-procedural-intersection", "03-procedural-intersection\03-procedural-intersection.vcxproj", "{69A680CF-6600-4BD9-8134-46654BC5BEA8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{8D9D4A3E-439A-4210-8879-259B20D992CA} = {8D9D4A3E-439A-4210-8879-259B20D992CA}
 		{1BC7FECA-4C79-4B0A-B018-6E341527B11E} = {1BC7FECA-4C79-4B0A-B018-6E341527B11E}
