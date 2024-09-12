@@ -152,6 +152,14 @@ programmatically with arbitrary shape like sphere, cylinder, cone, torus etc. In
 with a sphere is provided.
 <br><br><br><br>
 
+### [04 - Alpha texture](03-texture-alpha/)
+<img src="./screenshots/04.png" height="128px" align="left">
+Demonstrates how to invoke ray trace instruction recursively to implement alpha test. 
+When ray hits a triangle, we use barycentric coordinates to interpolate per-vertex texture coordinates across this triangle. 
+Then we sample triangle's texture and use its alpha value to decide, whether we should stop and return sampled color or
+we should continue by invoking ray trace instruction one more time.
+<br><br><br><br>
+
 ## Credits
 This framework uses a few third-party libraries:
 
