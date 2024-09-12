@@ -150,9 +150,9 @@ a special intersection shader may be injected into pipeline. First, we define AA
 Next, if intersection of ray and AABB is found, then intersection shader is invoked. This shader may compute intersection 
 programmatically with arbitrary shape like sphere, cylinder, cone, torus etc. In this example an optimized intersection 
 with a sphere is provided.
-<br><br><br><br>
+<br><br><br>
 
-### [04 - Alpha texture](03-texture-alpha/)
+### [04 - Alpha texture](04-texture-alpha/)
 <img src="./screenshots/04.png" height="128px" align="left">
 Demonstrates how to invoke ray trace instruction recursively to implement alpha test. 
 When ray hits a triangle, we use barycentric coordinates to interpolate per-vertex texture coordinates across this triangle. 
