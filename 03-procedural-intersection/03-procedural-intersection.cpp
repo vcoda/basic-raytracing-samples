@@ -54,9 +54,9 @@ public:
         magma::helpers::mapScoped(viewUniforms,
             [&view, &proj](View *data)
             {
-                data->viewProj = view * proj;
                 data->viewInv = rapid::inverse(view);
                 data->projInv = rapid::inverse(proj);
+                data->viewProjInv = data->projInv * rapid::matrix3(data->viewInv);
             });
     }
 

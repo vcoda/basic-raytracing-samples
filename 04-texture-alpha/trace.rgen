@@ -2,9 +2,9 @@
 #extension GL_EXT_ray_tracing: require
 
 layout(set = 0, binding = 0) uniform View {
-    mat4 viewProj;
-    mat4 viewInv;
-    mat4 projInv;
+    mat4x4 viewInv;
+    mat4x4 projInv;
+    mat4x4 viewProjInv;
 };
 layout(set = 0, binding = 1) uniform accelerationStructureEXT topLevel;
 layout(set = 1, binding = 0, rgba8) uniform writeonly image2D backBuffer;
@@ -14,10 +14,9 @@ layout(location = 0) rayPayloadEXT vec3 color;
 void main()
 {
     vec2 fragPos = gl_LaunchIDEXT.xy + 0.5;
-    vec2 pos = fragPos / gl_LaunchSizeEXT.xy * 2 - 1;
+    vec2 xy = fragPos / gl_LaunchSizeEXT.xy * 2 - 1;
     vec4 origin = viewInv * vec4(0, 0, 0, 1);
-    vec4 target = projInv * vec4(pos, 0, 1);
-    vec4 dir = viewInv * vec4(normalize(target.xyz), 0);
+    vec4 dir = viewProjInv * vec4(xy, 0, 1);
     float tmin = 0, tmax = 10;
 
     traceRayEXT(topLevel,
@@ -26,8 +25,8 @@ void main()
         0, // sbtRecordOffset
         0, // sbtRecordStride
         0, // missIndex
-        origin.xyz, tmin, 
-        dir.xyz, tmax,
+        origin.xyz, tmin,
+        normalize(dir.xyz), tmax,
         0); // payload
 
     imageStore(backBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1));

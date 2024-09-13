@@ -41,9 +41,9 @@ public:
 
     struct View
     {
-        rapid::matrix viewProj;
         rapid::matrix viewInv;
         rapid::matrix projInv;
+        rapid::matrix viewProjInv;
     };
 
     VulkanRayTracingApp(const AppEntry& entry, const std::tstring& caption, uint32_t width, uint32_t height);
