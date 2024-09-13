@@ -160,6 +160,13 @@ Then we sample triangle's texture and use its alpha value to decide, whether we 
 we should continue by invoking ray trace instruction one more time.
 <br><br><br><br>
 
+### [05 - Mesh](05-mesh/)
+<img src="./screenshots/05.png" height="128px" align="left">
+Draws a triangle mesh loaded from from Wavefront obj file. Vertices are stored in a storage buffer used for both acceleration structure
+construction and accesing data in the hit shader. When ray hits a triangle, we load triangle's vertices and compute its face normal.
+Dot product between normal and direction to light source is computed for diffuse reflection.
+<br><br><br><br>
+
 ## Credits
 This framework uses a few third-party libraries:
 
