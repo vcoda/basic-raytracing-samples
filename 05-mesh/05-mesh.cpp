@@ -92,9 +92,9 @@ public:
             ("../assets/meshes/" + fileName).c_str(), "../assets/meshes", true);
         MAGMA_ASSERT(result);
         if (warn.length())
-            std::cout << warn << std::endl;
+            std::cout << warn;
         if (error.length())
-            std::cerr << error << std::endl;
+            std::cerr << error;
         std::vector<rapid::float4> vertices;
         const tinyobj::mesh_t& mesh = shapes.front().mesh;
         vertices.reserve(mesh.indices.size());
@@ -109,16 +109,16 @@ public:
         }
         vertexBuffer = magma::helpers::makeInputBuffer(vertices, cmdBufferCopy);
         geometry = magma::AccelerationStructureGeometryTriangles(VK_FORMAT_R32G32B32A32_SFLOAT, vertexBuffer);
-        instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device, 1);
-        geometryInstance = magma::AccelerationStructureGeometryInstances(instanceBuffer);
     }
 
     void createAccelerationStructures()
     {
         bottomLevel = std::make_shared<magma::BottomLevelAccelerationStructure>(device,
-            std::forward_list<magma::AccelerationStructureGeometry>{geometry},
+            std::list<magma::AccelerationStructureGeometry>{geometry},
             VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
             VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+        instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device, 1);
+        geometryInstance = magma::AccelerationStructureGeometryInstances(instanceBuffer);
         instanceBuffer->getInstance(0).accelerationStructureReference = bottomLevel->getReference();
         topLevel = std::make_shared<magma::TopLevelAccelerationStructure>(device,
             geometryInstance,

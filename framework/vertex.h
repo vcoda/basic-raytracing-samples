@@ -9,7 +9,7 @@ struct alignas(16) Vertex
     uint32_t padding;
 };
 
-bool operator==(const Vertex& a, const Vertex& b) noexcept
+inline bool operator==(const Vertex& a, const Vertex& b) noexcept
 {
     return !memcmp(&a, &b, sizeof(a));
 }

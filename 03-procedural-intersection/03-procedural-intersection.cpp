@@ -68,16 +68,16 @@ public:
         };
         aabbBuffer = magma::helpers::makeInputBuffer(aabb, cmdBufferCopy);
         aabbGeometry = magma::AccelerationStructureGeometryAabbs(aabbBuffer);
-        instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device, 1);
-        geometryInstance = magma::AccelerationStructureGeometryInstances(instanceBuffer);
     }
 
     void createAccelerationStructures()
     {
         bottomLevel = std::make_shared<magma::BottomLevelAccelerationStructure>(device,
-            std::forward_list<magma::AccelerationStructureGeometry>{aabbGeometry},
+            std::list<magma::AccelerationStructureGeometry>{aabbGeometry},
             VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
             VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+        instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device, 1);
+        geometryInstance = magma::AccelerationStructureGeometryInstances(instanceBuffer);
         instanceBuffer->getInstance(0).accelerationStructureReference = bottomLevel->getReference();
         topLevel = std::make_shared<magma::TopLevelAccelerationStructure>(device,
             geometryInstance,

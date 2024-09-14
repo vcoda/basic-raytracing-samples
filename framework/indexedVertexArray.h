@@ -40,8 +40,8 @@ public:
             std::swap(indices[i + 1], indices[i + 2]);
     }
 
-    const vector<Vertex>& getVertices() const noexcept { return vertices; }
-    const vector<Index>& getIndices() const noexcept { return indices; }
+    vector<Vertex>& getVertices() noexcept { return vertices; }
+    vector<Index>& getIndices() noexcept { return indices; }
 
 private:
     vector<Vertex> vertices;
