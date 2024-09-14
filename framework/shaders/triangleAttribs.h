@@ -9,10 +9,10 @@ struct Vertex
     uint padding;
 };
 
-layout(buffer_reference, scalar) buffer VertexBuffer {
+layout(buffer_reference) buffer readonly VertexBuffer {
     Vertex vertices[];
 };
-layout(buffer_reference, scalar) buffer IndexBuffer {
+layout(buffer_reference) buffer readonly IndexBuffer {
     uint indices[];
 };
 
