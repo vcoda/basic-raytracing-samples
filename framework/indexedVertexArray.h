@@ -35,10 +35,9 @@ public:
 
     void changeWindingOrder() noexcept
     {
-        for (uint32_t i = 0, n = (uint32_t)indices.size(); i < n; i += 3)
-        {
+        const uint32_t count = MAGMA_COUNT(indices) - 2;
+        for (uint32_t i = 0; i < count; i += 3)
             std::swap(indices[i + 1], indices[i + 2]);
-        }
     }
 
     const vector<Vertex>& getVertices() const noexcept { return vertices; }
