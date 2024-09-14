@@ -167,6 +167,14 @@ construction and accesing data in the hit shader. When ray hits a triangle, we l
 Dot product between normal and direction to light source is computed for diffuse reflection.
 <br><br><br><br>
 
+### [06 - Model](06-model/)
+<img src="./screenshots/06.png" height="128px" align="left">
+This sample generalizes previous one by loading Wavefront obj file that consists of multiple shapes. In addition to position, a vertex 
+may have a normal, texture coordinate and color attributes. Components of normal and color are quantized to 8 bits and unpacked in the hit
+shader using unpackUnorm4x8() function. To fetch data of each individual geometry, we use so-called "buffer references" that actually 
+represent device memory addresses of vertex and index buffers. References require support of 64-bit arithmetic type from hardware.
+<br><br>
+
 ## Credits
 This framework uses a few third-party libraries:
 
