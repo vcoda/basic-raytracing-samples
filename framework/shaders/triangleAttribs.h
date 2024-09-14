@@ -16,8 +16,24 @@ layout(buffer_reference) buffer readonly IndexBuffer {
     uint indices[];
 };
 
-void interpolateTriangleAttributes(
-    uint64_t vbAddr, uint64_t ibAddr, vec3 barycentrics,
+void loadTriangleAttributes(uint64_t vbAddr, uint64_t ibAddr,
+    inout vec3 normal, inout vec3 color)
+{
+    uint i = gl_PrimitiveID * 3;
+    IndexBuffer ib = IndexBuffer(ibAddr);
+    uvec3 face;
+    face.x = ib.indices[i];
+    face.y = ib.indices[i + 1];
+    face.z = ib.indices[i + 2];
+    VertexBuffer vb = VertexBuffer(vbAddr);
+    vec3 v0 = vb.vertices[face.x].position;
+    vec3 v1 = vb.vertices[face.y].position;
+    vec3 v2 = vb.vertices[face.z].position;
+    normal = cross(v1 - v0, v2 - v0);
+    color = unpackUnorm4x8(vb.vertices[face.x].color).rgb;
+}
+
+void interpolateTriangleAttributes(uint64_t vbAddr, uint64_t ibAddr, vec3 barycentrics,
     inout vec3 normal, inout vec2 texCoord, inout vec3 color)
 {
     uint i = gl_PrimitiveID * 3;
