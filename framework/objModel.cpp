@@ -5,9 +5,8 @@
 #include "indexedVertexArray.h"
 
 ObjMesh::ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
-    const std::vector<tinyobj::material_t>& materials,
-    std::shared_ptr<magma::CommandBuffer> cmdBuffer,
-    bool swapYZ, bool flipV)
+    const std::vector<tinyobj::material_t>& materials, std::shared_ptr<magma::CommandBuffer> cmdBuffer,
+    bool swapYZ)
 {
     const int i1 = swapYZ ? 2 : 1;
     const int i2 = swapYZ ? 1 : 2;
@@ -24,17 +23,15 @@ ObjMesh::ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
         {
             int ni = index.normal_index * 3;
             v.normal[0] = packSnorm(attrib.normals[ni]);
-            v.normal[1] = packSnorm(attrib.normals[ni + 1]);
-            v.normal[2] = packSnorm(attrib.normals[ni + 2]);
+            v.normal[1] = packSnorm(attrib.normals[ni + i1]);
+            v.normal[2] = packSnorm(attrib.normals[ni + i2]);
             v.normal[3] = 0;
         }
         if (index.texcoord_index != -1)
         {
             int ti = index.texcoord_index << 1;
             v.texCoord.x = attrib.texcoords[ti];
-            v.texCoord.y = attrib.texcoords[ti + 1];
-            if (flipV)
-                v.texCoord.y = 1.f - v.texCoord.y;
+            v.texCoord.y = 1.f - attrib.texcoords[ti + 1];
         }
         vertices.push_back(v);
     }
@@ -66,8 +63,7 @@ ObjMesh::ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
         indexedVertices.getIndices().data());
 }
 
-ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBuffer> cmdBuffer,
-    bool swapYZ, bool flipV)
+ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBuffer> cmdBuffer, bool swapYZ)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -89,7 +85,7 @@ ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBu
     std::forward_list<magma::AccelerationStructureGeometry> geometries;
     for (const tinyobj::shape_t& shape: shapes)
     {
-        std::unique_ptr<ObjMesh> mesh = std::make_unique<ObjMesh>(shape.mesh, attrib, materials, cmdBuffer, swapYZ, flipV);
+        std::unique_ptr<ObjMesh> mesh = std::make_unique<ObjMesh>(shape.mesh, attrib, materials, cmdBuffer, swapYZ);
         magma::AccelerationStructureGeometryTriangles triangles(
             VK_FORMAT_R32G32B32_SFLOAT, mesh->getVertexBuffer(),
             VK_INDEX_TYPE_UINT32, mesh->getIndexBuffer());
