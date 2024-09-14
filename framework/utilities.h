@@ -9,7 +9,7 @@ template<class T, class Alloc = std::allocator<T>>
 class vector : public std::vector<T, Alloc>
 {
 public:
-    std::size_t data_size() const noexcept { return std::vector<T, Alloc>::size() * sizeof(T); }
+    std::size_t size_bytes() const noexcept { return std::vector<T, Alloc>::size() * sizeof(T); }
 };
 
 template<class Type>

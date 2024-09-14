@@ -59,10 +59,10 @@ ObjMesh::ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
     if (swapYZ)
         indexedVertices.changeWindingOrder();
     vertexBuffer = std::make_shared<magma::AccelerationStructureInputBuffer>(cmdBuffer,
-        indexedVertices.getVertices().data_size(),
+        indexedVertices.getVertices().size_bytes(),
         indexedVertices.getVertices().data());
     indexBuffer = std::make_shared<magma::AccelerationStructureInputBuffer>(cmdBuffer,
-        indexedVertices.getIndices().data_size(),
+        indexedVertices.getIndices().size_bytes(),
         indexedVertices.getIndices().data());
 }
 
@@ -123,5 +123,5 @@ ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBu
         bufferAddresses.push_back(mesh->getIndexBuffer()->getDeviceAddress());
     }
     referenceBuffer = std::make_shared<magma::StorageBuffer>(cmdBuffer,
-        bufferAddresses.data_size(), bufferAddresses.data());
+        bufferAddresses.size_bytes(), bufferAddresses.data());
 }
