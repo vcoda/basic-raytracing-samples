@@ -72,7 +72,7 @@ ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBu
     // Load .obj model
     constexpr bool triangulate = true;
     const bool result = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
-        ("../assets/" + fileName).c_str(), "../assets", triangulate);
+        ("../assets/meshes/" + fileName).c_str(), "../assets/meshes/", triangulate);
     if (warn.length())
         std::cout << warn << std::endl;
     if (!result)
