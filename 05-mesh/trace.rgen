@@ -20,8 +20,8 @@ void main()
     float tmin = 0, tmax = 1000;
 
     traceRayEXT(topLevel,
-        gl_RayFlagsOpaqueEXT,
-        gl_RayFlagsCullBackFacingTrianglesEXT,
+        gl_RayFlagsOpaqueEXT | gl_RayFlagsCullBackFacingTrianglesEXT,
+        0xFF, // cullMask
         0, // sbtRecordOffset
         0, // sbtRecordStride
         0, // missIndex
