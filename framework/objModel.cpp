@@ -1,7 +1,11 @@
 #define TINYOBJLOADER_IMPLEMENTATION
+#include "../third-party/tinyobjloader/tiny_obj_loader.h"
+#include "../third-party/rapid/rapid.h"
 #include "objModel.h"
+#include "vertex.h"
 #include "packing.h"
 #include "indexedVertexArray.h"
+#include "image.h"
 
 ObjMesh::ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
     const std::vector<tinyobj::material_t>& materials,
@@ -68,7 +72,7 @@ ObjMesh::ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
         indexedVertices.getIndices().data());
 }
 
-void ObjMesh::calculateVertexNormals(vector<Vertex>& vertices, const vector<uint32_t>& indices) const
+void ObjMesh::calculateVertexNormals(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const
 {
     std::vector<rapid::vector3> normals(vertices.size(), XMVectorZero());
     const std::size_t numTriangles = indices.size() / 3;
@@ -147,4 +151,32 @@ ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBu
     }
     cmdBuffer->end();
     magma::finish(cmdBuffer);
+    // Load materials
+    textureCache["blank"] = loadBlankImage(cmdBuffer);
+    for (const tinyobj::material_t& mat: materials)
+    {
+        ObjMaterial material;
+        material.ambientMap = loadTexture(mat.ambient_texname, cmdBuffer);
+        material.diffuseMap = loadTexture(mat.diffuse_texname, cmdBuffer);
+        material.specularMap = loadTexture(mat.specular_texname, cmdBuffer);
+        material.bumpMap = loadTexture(mat.bump_texname, cmdBuffer);
+        material.alphaMap = loadTexture(mat.alpha_texname, cmdBuffer);
+        material.reflectionMap = loadTexture(mat.reflection_texname, cmdBuffer);
+        this->materials.push_back(material);
+    }
+}
+
+std::shared_ptr<magma::ImageView> ObjModel::loadTexture(const std::string& fileName,
+    std::shared_ptr<magma::CommandBuffer> cmdBuffer)
+{
+    if (fileName.empty())
+        return textureCache["blank"];
+    // Lookup texture cache
+    auto it = textureCache.find(fileName);
+    if (it != textureCache.end())
+        return it->second;
+    auto texture = loadImage("../assets/meshes/" + fileName, cmdBuffer);
+    if (texture)
+        return textureCache[fileName] = texture;
+    return textureCache["blank"];
 }

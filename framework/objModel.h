@@ -1,9 +1,14 @@
 #pragma once
-#include "../third-party/tinyobjloader/tiny_obj_loader.h"
 #include "../third-party/magma/magma.h"
-#include "../third-party/rapid/rapid.h"
-#include "vertex.h"
-#include "utilities.h"
+
+struct Vertex;
+
+namespace tinyobj
+{
+    struct mesh_t;
+    struct material_t;
+    struct attrib_t;
+}
 
 class ObjMesh
 {
@@ -16,10 +21,21 @@ public:
     const std::shared_ptr<magma::Buffer>& getIndexBuffer() const noexcept { return indexBuffer; }
 
 private:
-    void calculateVertexNormals(vector<Vertex>& vertices, const vector<uint32_t>& indices) const;
+    void calculateVertexNormals(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
 
     std::shared_ptr<magma::Buffer> vertexBuffer;
     std::shared_ptr<magma::Buffer> indexBuffer;
+};
+
+struct ObjMaterial
+{
+    std::string name;
+    std::shared_ptr<magma::ImageView> ambientMap;
+    std::shared_ptr<magma::ImageView> diffuseMap;
+    std::shared_ptr<magma::ImageView> specularMap;
+    std::shared_ptr<magma::ImageView> bumpMap;
+    std::shared_ptr<magma::ImageView> alphaMap;
+    std::shared_ptr<magma::ImageView> reflectionMap;
 };
 
 class ObjModel
@@ -28,9 +44,15 @@ public:
     explicit ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBuffer> cmdBuffer,
         bool calculateNormals = false, bool swapYZ = false);
     const std::list<ObjMesh>& getMeshes() const noexcept { return meshes; }
+    const std::list<ObjMaterial>& getMaterials() const noexcept { return materials; }
     uint64_t getAccelerationStructureReference() const noexcept { return bottomLevel->getReference(); }
 
 private:
+    std::shared_ptr<magma::ImageView> loadTexture(const std::string& fileName,
+        std::shared_ptr<magma::CommandBuffer> cmdBuffer);
+
     std::list<ObjMesh> meshes;
+    std::list<ObjMaterial> materials;
+    std::map<std::string, std::shared_ptr<magma::ImageView>> textureCache;
     std::shared_ptr<magma::BottomLevelAccelerationStructure> bottomLevel;
 };
