@@ -6,7 +6,7 @@ struct alignas(16) Vertex
     int8_t normal[4];
     rapid::float2 texCoord;
     uint8_t color[4];
-    uint32_t padding;
+    uint32_t matId;
 };
 
 inline bool operator==(const Vertex& a, const Vertex& b) noexcept

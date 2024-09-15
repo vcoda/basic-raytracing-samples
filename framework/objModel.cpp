@@ -50,6 +50,7 @@ ObjMesh::ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
                 v.color[1] = packUnorm(material.diffuse[1]);
                 v.color[2] = packUnorm(material.diffuse[2]);
                 v.color[3] = 255;
+                v.matId = static_cast<uint32_t>(matId);
             }
             ++face;
         }
