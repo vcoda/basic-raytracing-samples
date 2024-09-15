@@ -46,6 +46,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "06-model", "06-model\06-mod
 		{1BC7FECA-4C79-4B0A-B018-6E341527B11E} = {1BC7FECA-4C79-4B0A-B018-6E341527B11E}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "07-texture-mapping", "07-texture-mapping\07-texture-mapping.vcxproj", "{33572A38-A1C1-4AEF-BB5B-BCECC6BCD153}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8D9D4A3E-439A-4210-8879-259B20D992CA} = {8D9D4A3E-439A-4210-8879-259B20D992CA}
+		{1BC7FECA-4C79-4B0A-B018-6E341527B11E} = {1BC7FECA-4C79-4B0A-B018-6E341527B11E}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -84,6 +90,10 @@ Global
 		{DFE596CF-B846-4C56-9070-4E94EF1A7E2B}.Debug|x64.Build.0 = Debug|x64
 		{DFE596CF-B846-4C56-9070-4E94EF1A7E2B}.Release|x64.ActiveCfg = Release|x64
 		{DFE596CF-B846-4C56-9070-4E94EF1A7E2B}.Release|x64.Build.0 = Release|x64
+		{33572A38-A1C1-4AEF-BB5B-BCECC6BCD153}.Debug|x64.ActiveCfg = Debug|x64
+		{33572A38-A1C1-4AEF-BB5B-BCECC6BCD153}.Debug|x64.Build.0 = Debug|x64
+		{33572A38-A1C1-4AEF-BB5B-BCECC6BCD153}.Release|x64.ActiveCfg = Release|x64
+		{33572A38-A1C1-4AEF-BB5B-BCECC6BCD153}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
