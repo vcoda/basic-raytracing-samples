@@ -126,6 +126,7 @@ ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBu
             VK_FORMAT_R32G32B32_SFLOAT, mesh.getVertexBuffer(),
             VK_INDEX_TYPE_UINT32, mesh.getIndexBuffer());
         triangles.geometry.triangles.vertexStride = sizeof(Vertex);
+        triangles.geometry.triangles.maxVertex = static_cast<uint32_t>(mesh.getVertexBuffer()->getSize() / sizeof(Vertex));
         geometries.push_back(triangles);
         meshes.push_back(mesh);
     }
