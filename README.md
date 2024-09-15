@@ -175,6 +175,13 @@ shader using unpackUnorm4x8() function. To fetch data of each individual geometr
 represent device memory addresses of vertex and index buffers. References require support of 64-bit arithmetic type from hardware.
 <br><br>
 
+### [07 - Texture mapping](07-texture-mapping/)
+<img src="./screenshots/07.png" height="128px" align="left">
+Performs interpolation of per-vertex attributes like normal and texture coordinates across triangle using barycentric coordinates. 
+Loads diffuse texture provided with obj model (for simplicity, a single texture is used). Computes Phong BRDF with albedo for lighting. 
+User can rotate the model and zoom view.
+<br><br><br><br>
+
 ## Credits
 This framework uses a few third-party libraries:
 
