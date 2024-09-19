@@ -100,7 +100,7 @@ public:
     void createInstanceBuffer()
     {
         instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device, 1);
-        instanceBuffer->getInstance(0).accelerationStructureReference = model->getAccelerationStructureReference();
+        instanceBuffer->getInstance(0).accelerationStructureReference = model->getAccelerationStructure()->getReference();
         geometryInstance = magma::AccelerationStructureGeometryInstances(instanceBuffer);
     }
 

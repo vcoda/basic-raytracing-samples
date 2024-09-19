@@ -45,7 +45,7 @@ public:
         bool calculateNormals = false, bool swapYZ = false);
     const std::list<ObjMesh>& getMeshes() const noexcept { return meshes; }
     const std::list<ObjMaterial>& getMaterials() const noexcept { return materials; }
-    uint64_t getAccelerationStructureReference() const noexcept { return bottomLevel->getReference(); }
+    const std::shared_ptr<magma::BottomLevelAccelerationStructure>& getAccelerationStructure() const noexcept { return bottomLevel; }
 
 private:
     std::shared_ptr<magma::ImageView> loadTexture(const std::string& name, const std::string& directory,
