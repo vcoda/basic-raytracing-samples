@@ -182,6 +182,12 @@ Loads diffuse texture provided with obj model (for simplicity, a single texture 
 User can rotate the model and zoom view.
 <br><br><br><br>
 
+### [08 - Shader binding table](08-shader-binding-table/)
+<img src="./screenshots/08.png" height="128px" align="left">
+Uses shader binding table (SBT) to assign dedicated hit shader for each object instance. In this way we can create multiple materials with
+unique shading behaviour.
+<br><br><br><br>
+
 ## Credits
 This framework uses a few third-party libraries:
 
