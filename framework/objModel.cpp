@@ -109,10 +109,15 @@ ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBu
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
+    std::string directory;
+    size_t lastSlash = fileName.find_last_of("/\\");
+    if (lastSlash != std::string::npos)
+        directory = fileName.substr(0, lastSlash);
     // Load .obj model
     constexpr bool triangulate = true;
     const bool result = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
-        ("../assets/meshes/" + fileName).c_str(), "../assets/meshes/", triangulate);
+        ("../assets/meshes/" + fileName).c_str(),
+        ("../assets/meshes/" + directory).c_str(), triangulate);
     if (warn.length())
         std::cout << warn;
     if (!result)
@@ -156,27 +161,27 @@ ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBu
     for (const tinyobj::material_t& mat: materials)
     {
         ObjMaterial material;
-        material.ambientMap = loadTexture(mat.ambient_texname, cmdBuffer);
-        material.diffuseMap = loadTexture(mat.diffuse_texname, cmdBuffer);
-        material.specularMap = loadTexture(mat.specular_texname, cmdBuffer);
-        material.bumpMap = loadTexture(mat.bump_texname, cmdBuffer);
-        material.alphaMap = loadTexture(mat.alpha_texname, cmdBuffer);
-        material.reflectionMap = loadTexture(mat.reflection_texname, cmdBuffer);
+        material.ambientMap = loadTexture(mat.ambient_texname, directory, cmdBuffer);
+        material.diffuseMap = loadTexture(mat.diffuse_texname, directory, cmdBuffer);
+        material.specularMap = loadTexture(mat.specular_texname, directory, cmdBuffer);
+        material.bumpMap = loadTexture(mat.bump_texname, directory, cmdBuffer);
+        material.alphaMap = loadTexture(mat.alpha_texname, directory, cmdBuffer);
+        material.reflectionMap = loadTexture(mat.reflection_texname, directory, cmdBuffer);
         this->materials.push_back(material);
     }
 }
 
-std::shared_ptr<magma::ImageView> ObjModel::loadTexture(const std::string& fileName,
+std::shared_ptr<magma::ImageView> ObjModel::loadTexture(const std::string& name, const std::string& directory,
     std::shared_ptr<magma::CommandBuffer> cmdBuffer)
 {
-    if (fileName.empty())
+    if (name.empty())
         return textureCache["blank"];
     // Lookup texture cache
-    auto it = textureCache.find(fileName);
+    auto it = textureCache.find(name);
     if (it != textureCache.end())
         return it->second;
-    auto texture = loadImage("../assets/meshes/" + fileName, cmdBuffer);
+    auto texture = loadImage("../assets/meshes/" + directory + "/" + name, cmdBuffer);
     if (texture)
-        return textureCache[fileName] = texture;
+        return textureCache[name] = texture;
     return textureCache["blank"];
 }

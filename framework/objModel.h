@@ -48,7 +48,7 @@ public:
     uint64_t getAccelerationStructureReference() const noexcept { return bottomLevel->getReference(); }
 
 private:
-    std::shared_ptr<magma::ImageView> loadTexture(const std::string& fileName,
+    std::shared_ptr<magma::ImageView> loadTexture(const std::string& name, const std::string& directory,
         std::shared_ptr<magma::CommandBuffer> cmdBuffer);
 
     std::list<ObjMesh> meshes;
