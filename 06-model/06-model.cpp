@@ -1,6 +1,7 @@
 #include "../framework/vulkanRtApp.h"
 #include "../framework/rayTracingPipeline.h"
 #include "../framework/objModel.h"
+#include "../framework/utilities.h"
 
 class ModelApp : public VulkanRayTracingApp
 {
@@ -16,11 +17,11 @@ class ModelApp : public VulkanRayTracingApp
     std::unique_ptr<ObjModel> model;
     std::unique_ptr<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>> instanceBuffer;
     magma::AccelerationStructureGeometryInstances geometryInstance;
-    std::shared_ptr<magma::TopLevelAccelerationStructure> topLevel;
-    std::shared_ptr<magma::StorageBuffer> bufferReferences;
-    std::shared_ptr<magma::UniformBuffer<rapid::matrix>> normalMatrix;
-    std::shared_ptr<magma::DescriptorSet> descriptorSet;
-    std::shared_ptr<magma::RayTracingPipeline> pipeline;
+    std::unique_ptr<magma::TopLevelAccelerationStructure> topLevel;
+    std::unique_ptr<magma::StorageBuffer> bufferReferences;
+    std::unique_ptr<magma::UniformBuffer<rapid::matrix>> normalMatrix;
+    std::unique_ptr<magma::DescriptorSet> descriptorSet;
+    std::unique_ptr<magma::RayTracingPipeline> pipeline;
     magma::ShaderBindingTable shaderBindingTable;
 
 public:
@@ -56,7 +57,7 @@ public:
         constexpr float zn = 0.1f, zf = 1.f;
         const rapid::matrix view = rapid::lookAtRH(eye, center, up);
         const rapid::matrix proj = rapid::perspectiveFovRH(fov, aspect, zn, zf);
-        magma::helpers::mapScoped(viewUniforms,
+        magma::map(viewUniforms,
             [&view, &proj](View *data)
             {
                 data->viewInv = rapid::inverse(view);
@@ -74,7 +75,7 @@ public:
         const rapid::matrix world = rapid::rotationY(rapid::radians(angle));
         auto& instance = instanceBuffer->getInstance(0);
         world.store(instance.transform.matrix);
-        magma::helpers::mapScoped(normalMatrix,
+        magma::map(normalMatrix,
             [&world](rapid::matrix *normal)
             {
                 *normal = rapid::transpose(rapid::inverse(world));
@@ -88,25 +89,25 @@ public:
 
     void createReferenceBuffer()
     {
-        std::vector<VkDeviceAddress> addresses;
+        vector<VkDeviceAddress> addresses;
         for (auto const& mesh: model->getMeshes())
         {   // Hit shader loads mesh data from these buffers
             addresses.push_back(mesh.getVertexBuffer()->getDeviceAddress());
             addresses.push_back(mesh.getIndexBuffer()->getDeviceAddress());
         }
-        bufferReferences = magma::helpers::makeStorageBuffer(addresses, cmdBufferCopy);
+        bufferReferences = utilities::makeStorageBuffer(addresses, cmdBufferCopy, allocator);
     }
 
     void createInstanceBuffer()
     {
         instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device, 1);
         instanceBuffer->getInstance(0).accelerationStructureReference = model->getAccelerationStructure()->getReference();
-        geometryInstance = magma::AccelerationStructureGeometryInstances(instanceBuffer);
+        geometryInstance = magma::AccelerationStructureGeometryInstances(instanceBuffer.get());
     }
 
     void buildTopLevelAccelerationStructure()
     {
-        topLevel = std::make_shared<magma::TopLevelAccelerationStructure>(device, geometryInstance,
+        topLevel = std::make_unique<magma::TopLevelAccelerationStructure>(device, geometryInstance,
             VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
             VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR);
         scratchBuffer = allocateScratchBuffer(topLevel->getBuildScratchSize());
@@ -126,7 +127,7 @@ public:
 
     void createUniformBuffer()
     {
-        normalMatrix = std::make_shared<magma::UniformBuffer<rapid::matrix>>(device);
+        normalMatrix = std::make_unique<magma::UniformBuffer<rapid::matrix>>(device);
     }
 
     void setupDescriptorSet()
@@ -135,7 +136,7 @@ public:
         setTable.topLevel = topLevel;
         setTable.bufferReferences = bufferReferences;
         setTable.normalMatrix = normalMatrix;
-        descriptorSet = std::make_shared<magma::DescriptorSet>(descriptorPool, setTable,
+        descriptorSet = std::make_unique<magma::DescriptorSet>(descriptorPool, setTable,
             VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR);
     }
 
@@ -146,12 +147,12 @@ public:
             magma::TrianglesHitRayTracingShaderGroup(1),
             magma::GeneralRayTracingShaderGroup(2)
         };
-        auto layout = std::shared_ptr<magma::PipelineLayout>(new magma::PipelineLayout(
+        auto layout = std::unique_ptr<magma::PipelineLayout>(new magma::PipelineLayout(
             {
                 descriptorSet->getLayout(),
                 swapchainDescriptorSets.front()->getLayout(),
             }));
-        pipeline = std::shared_ptr<magma::RayTracingPipeline>(new RayTracingPipeline(device,
+        pipeline = std::unique_ptr<magma::RayTracingPipeline>(new RayTracingPipeline(device,
             {"trace", "hit", "miss"}, shaderGroups, 1, std::move(layout)));
         // Light pos
         shaderBindingTable.addShaderRecord(VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, 1, rapid::float3(200, 1000, 1000));
@@ -162,8 +163,8 @@ public:
 
     void recordCommandBuffer(uint32_t index)
     {
-        auto& cmdBuffer = commandBuffers[index];
-        auto& backBuffer = swapchainImageViews[index]->getImage();
+        std::shared_ptr<magma::CommandBuffer>& cmdBuffer = commandBuffers[index];
+        magma::Image *backBuffer = swapchainImageViews[index]->getImage();
         cmdBuffer->begin();
         {
             backBuffer->layoutTransition(VK_IMAGE_LAYOUT_GENERAL, cmdBuffer);

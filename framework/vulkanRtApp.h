@@ -65,15 +65,15 @@ protected:
     void createDescriptorSets();
     void createUniformBuffers();
 
-    std::shared_ptr<magma::Buffer> allocateScratchBuffer(VkDeviceSize size);
+    std::unique_ptr<magma::Buffer> allocateScratchBuffer(VkDeviceSize size);
     void submitCommandBuffer(uint32_t bufferIndex);
     void submitCopyImageCommands();
     void submitCopyBufferCommands();
 
-    std::shared_ptr<magma::IAllocator> allocator;
+    std::shared_ptr<magma::Allocator> allocator;
     std::shared_ptr<magma::Instance> instance;
-    std::shared_ptr<magma::DebugReportCallback> debugReportCallback;
-    std::shared_ptr<magma::Surface> surface;
+    std::unique_ptr<magma::DebugReportCallback> debugReportCallback;
+    std::unique_ptr<magma::Surface> surface;
     std::shared_ptr<magma::PhysicalDevice> physicalDevice;
     std::shared_ptr<magma::Device> device;
     std::unique_ptr<magma::Swapchain> swapchain;
@@ -81,9 +81,9 @@ protected:
     std::unique_ptr<magma::DeviceExtensions> extensions;
     std::vector<std::shared_ptr<magma::ImageView>> swapchainImageViews;
     std::shared_ptr<magma::RenderPass> renderPass;
-    std::vector<std::shared_ptr<magma::Framebuffer>> framebuffers;
+    std::vector<std::unique_ptr<magma::Framebuffer>> framebuffers;
 
-    std::shared_ptr<magma::CommandPool> commandPools[3];
+    std::unique_ptr<magma::CommandPool> commandPools[3];
     std::vector<std::shared_ptr<magma::CommandBuffer>> commandBuffers;
     std::shared_ptr<magma::CommandBuffer> cmdImageCopy;
     std::shared_ptr<magma::CommandBuffer> cmdBufferCopy;
@@ -92,19 +92,19 @@ protected:
     std::shared_ptr<magma::Queue> graphicsQueue;
     std::shared_ptr<magma::Queue> computeQueue;
     std::shared_ptr<magma::Queue> transferQueue;
-    std::shared_ptr<magma::Semaphore> presentFinished;
-    std::shared_ptr<magma::Semaphore> renderFinished;
+    std::unique_ptr<magma::Semaphore> presentFinished;
+    std::unique_ptr<magma::Semaphore> renderFinished;
     std::vector<std::unique_ptr<magma::Fence>> waitFences;
     const std::unique_ptr<magma::Fence> nullFence;
     const std::unique_ptr<magma::Fence> *waitFence;
 
     std::shared_ptr<magma::DescriptorPool> descriptorPool;
     std::vector<std::shared_ptr<magma::DescriptorSet>> swapchainDescriptorSets;
-    std::shared_ptr<magma::UniformBuffer<View>> viewUniforms;
-    std::shared_ptr<magma::Buffer> scratchBuffer;
+    std::unique_ptr<magma::UniformBuffer<View>> viewUniforms;
+    std::unique_ptr<magma::Buffer> scratchBuffer;
 
-    std::shared_ptr<magma::PipelineCache> pipelineCache;
-    std::shared_ptr<ShaderReflectionFactory> shaderReflectionFactory;
+    std::unique_ptr<magma::PipelineCache> pipelineCache;
+    std::unique_ptr<ShaderReflectionFactory> shaderReflectionFactory;
 
     std::unique_ptr<Timer> timer;
     VkSurfaceFormatKHR backbufferFormat;

@@ -1,6 +1,7 @@
 #include "../framework/vulkanRtApp.h"
 #include "../framework/rayTracingPipeline.h"
 #include "../framework/image.h"
+#include "../framework/utilities.h"
 
 class TextureAlphaApp : public VulkanRayTracingApp
 {
@@ -16,14 +17,14 @@ class TextureAlphaApp : public VulkanRayTracingApp
     magma::AccelerationStructureGeometryTriangles geometry;
     magma::AccelerationStructureGeometryInstances geometryInstance;
     std::unique_ptr<magma::AccelerationStructureInputBuffer> vertexBuffer;
-    std::shared_ptr<magma::StorageBuffer> texCoordBuffer;
+    std::unique_ptr<magma::StorageBuffer> texCoordBuffer;
     std::unique_ptr<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>> instanceBuffer;
-    std::shared_ptr<magma::BottomLevelAccelerationStructure> bottomLevel;
-    std::shared_ptr<magma::TopLevelAccelerationStructure> topLevel;
-    std::shared_ptr<magma::ImageView> albedo;
-    std::shared_ptr<magma::Sampler> bilinearSampler;
-    std::shared_ptr<magma::DescriptorSet> descriptorSet;
-    std::shared_ptr<magma::RayTracingPipeline> pipeline;
+    std::unique_ptr<magma::BottomLevelAccelerationStructure> bottomLevel;
+    std::unique_ptr<magma::TopLevelAccelerationStructure> topLevel;
+    std::unique_ptr<magma::ImageView> albedo;
+    std::unique_ptr<magma::Sampler> bilinearSampler;
+    std::unique_ptr<magma::DescriptorSet> descriptorSet;
+    std::unique_ptr<magma::RayTracingPipeline> pipeline;
     magma::ShaderBindingTable shaderBindingTable;
 
 public:
@@ -58,7 +59,7 @@ public:
         constexpr float zn = 0.1f, zf = 10.f;
         const rapid::matrix view = rapid::lookAtRH(eye, center, up);
         const rapid::matrix proj = rapid::perspectiveFovRH(fov, aspect, zn, zf);
-        magma::helpers::mapScoped(viewUniforms,
+        magma::map(viewUniforms,
             [&view, &proj](View *data)
             {
                 data->viewInv = rapid::inverse(view);
@@ -81,7 +82,7 @@ public:
     void loadTexture()
     {
         albedo = loadImage("../assets/textures/leaf.png", cmdImageCopy);
-        bilinearSampler = std::make_shared<magma::Sampler>(device, magma::sampler::magMinLinearMipNearestClampToEdge);
+        bilinearSampler = std::make_unique<magma::Sampler>(device, magma::sampler::magMinLinearMipNearestClampToEdge);
     }
 
     void createGeometry()
@@ -103,21 +104,21 @@ public:
             {1, 0},
             {1, 1}
         };
-        vertexBuffer = magma::helpers::makeInputBuffer(vertices, cmdBufferCopy);
-        texCoordBuffer = magma::helpers::makeStorageBuffer(texCoords, cmdBufferCopy);
-        geometry = magma::AccelerationStructureGeometryTriangles(VK_FORMAT_R32G32_SFLOAT, vertexBuffer);
+        vertexBuffer = utilities::makeInputBuffer(vertices, cmdBufferCopy, allocator);
+        texCoordBuffer = utilities::makeStorageBuffer(texCoords, cmdBufferCopy, allocator);
+        geometry = magma::AccelerationStructureGeometryTriangles(VK_FORMAT_R32G32_SFLOAT, vertexBuffer.get());
     }
 
     void createAccelerationStructures()
     {
-        bottomLevel = std::make_shared<magma::BottomLevelAccelerationStructure>(device,
+        bottomLevel = std::make_unique<magma::BottomLevelAccelerationStructure>(device,
             std::list<magma::AccelerationStructureGeometry>{geometry},
             VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
             VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
         instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device, 1);
-        geometryInstance = magma::AccelerationStructureGeometryInstances(instanceBuffer);
+        geometryInstance = magma::AccelerationStructureGeometryInstances(instanceBuffer.get());
         instanceBuffer->getInstance(0).accelerationStructureReference = bottomLevel->getReference();
-        topLevel = std::make_shared<magma::TopLevelAccelerationStructure>(device,
+        topLevel = std::make_unique<magma::TopLevelAccelerationStructure>(device,
             geometryInstance,
             VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
             VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR);
@@ -151,7 +152,7 @@ public:
         setTable.topLevel = topLevel;
         setTable.texCoords = texCoordBuffer;
         setTable.image = {albedo, bilinearSampler};
-        descriptorSet = std::make_shared<magma::DescriptorSet>(descriptorPool, setTable,
+        descriptorSet = std::make_unique<magma::DescriptorSet>(descriptorPool, setTable,
             VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR);
     }
 
@@ -162,21 +163,21 @@ public:
             magma::TrianglesHitRayTracingShaderGroup(1),
             magma::GeneralRayTracingShaderGroup(2)
         };
-        auto layout = std::shared_ptr<magma::PipelineLayout>(new magma::PipelineLayout(
+        auto layout = std::unique_ptr<magma::PipelineLayout>(new magma::PipelineLayout(
             {
                 descriptorSet->getLayout(),
                 swapchainDescriptorSets.front()->getLayout(),
             }));
         constexpr uint32_t maxRayRecursionDepth = 2;
-        pipeline = std::shared_ptr<magma::RayTracingPipeline>(new RayTracingPipeline(device,
+        pipeline = std::unique_ptr<magma::RayTracingPipeline>(new RayTracingPipeline(device,
             {"trace", "hit", "miss"}, shaderGroups, maxRayRecursionDepth, std::move(layout)));
         shaderBindingTable.build(pipeline, cmdBufferCopy);
     }
 
     void recordCommandBuffer(uint32_t index)
     {
-        auto& cmdBuffer = commandBuffers[index];
-        auto& backBuffer = swapchainImageViews[index]->getImage();
+        std::shared_ptr<magma::CommandBuffer>& cmdBuffer = commandBuffers[index];
+        magma::Image *backBuffer = swapchainImageViews[index]->getImage();
         cmdBuffer->begin();
         {
             backBuffer->layoutTransition(VK_IMAGE_LAYOUT_GENERAL, cmdBuffer);

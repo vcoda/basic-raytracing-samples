@@ -35,7 +35,7 @@ public:
 
     void changeWindingOrder() noexcept
     {
-        const uint32_t count = MAGMA_COUNT(indices) - 2;
+        const uint32_t count = (uint32_t)indices.size() - 2;
         for (uint32_t i = 0; i < count; i += 3)
             std::swap(indices[i + 1], indices[i + 2]);
     }

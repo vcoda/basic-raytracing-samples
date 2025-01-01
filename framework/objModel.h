@@ -17,14 +17,16 @@ public:
         const std::vector<tinyobj::material_t>& materials,
         std::shared_ptr<magma::CommandBuffer> cmdBuffer,
         bool calculateNormals, bool swapYZ);
-    const std::shared_ptr<magma::Buffer>& getVertexBuffer() const noexcept { return vertexBuffer; }
-    const std::shared_ptr<magma::Buffer>& getIndexBuffer() const noexcept { return indexBuffer; }
+    ObjMesh(ObjMesh&&) noexcept = default;
+    ObjMesh& operator=(ObjMesh&&) noexcept = default;
+    const std::unique_ptr<magma::Buffer>& getVertexBuffer() const noexcept { return vertexBuffer; }
+    const std::unique_ptr<magma::Buffer>& getIndexBuffer() const noexcept { return indexBuffer; }
 
 private:
     void calculateVertexNormals(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
 
-    std::shared_ptr<magma::Buffer> vertexBuffer;
-    std::shared_ptr<magma::Buffer> indexBuffer;
+    std::unique_ptr<magma::Buffer> vertexBuffer;
+    std::unique_ptr<magma::Buffer> indexBuffer;
 };
 
 struct ObjMaterial

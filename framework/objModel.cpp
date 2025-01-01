@@ -64,10 +64,10 @@ ObjMesh::ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
         indexedVertices.changeWindingOrder();
     if (calculateNormals)
         calculateVertexNormals(indexedVertices.getVertices(), indexedVertices.getIndices());
-    vertexBuffer = std::make_shared<magma::AccelerationStructureInputBuffer>(cmdBuffer,
+    vertexBuffer = std::make_unique<magma::AccelerationStructureInputBuffer>(cmdBuffer,
         indexedVertices.getVertices().size_bytes(),
         indexedVertices.getVertices().data());
-    indexBuffer = std::make_shared<magma::AccelerationStructureInputBuffer>(std::move(cmdBuffer),
+    indexBuffer = std::make_unique<magma::AccelerationStructureInputBuffer>(std::move(cmdBuffer),
         indexedVertices.getIndices().size_bytes(),
         indexedVertices.getIndices().data());
 }
@@ -130,14 +130,14 @@ ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBu
     std::list<magma::AccelerationStructureGeometry> geometries;
     for (const tinyobj::shape_t& shape: shapes)
     {
-        const ObjMesh mesh(shape.mesh, attrib, materials, cmdBuffer, calculateNormals, swapYZ);
+        ObjMesh mesh(shape.mesh, attrib, materials, cmdBuffer, calculateNormals, swapYZ);
         magma::AccelerationStructureGeometryTriangles triangles(
-            VK_FORMAT_R32G32B32_SFLOAT, mesh.getVertexBuffer(),
-            VK_INDEX_TYPE_UINT32, mesh.getIndexBuffer());
+            VK_FORMAT_R32G32B32_SFLOAT, mesh.getVertexBuffer().get(),
+            VK_INDEX_TYPE_UINT32, mesh.getIndexBuffer().get());
         triangles.geometry.triangles.vertexStride = sizeof(Vertex);
         triangles.geometry.triangles.maxVertex = static_cast<uint32_t>(mesh.getVertexBuffer()->getSize() / sizeof(Vertex));
         geometries.push_back(triangles);
-        meshes.push_back(mesh);
+        meshes.emplace_back(std::move(mesh));
     }
     // Create BLAS for all geometries
     bottomLevel = std::make_shared<magma::BottomLevelAccelerationStructure>(cmdBuffer->getDevice(),
@@ -180,8 +180,8 @@ std::shared_ptr<magma::ImageView> ObjModel::loadTexture(const std::string& name,
     auto it = textureCache.find(name);
     if (it != textureCache.end())
         return it->second;
-    auto texture = loadImage("../assets/meshes/" + directory + "/" + name, cmdBuffer);
+    std::unique_ptr<magma::ImageView> texture = loadImage("../assets/meshes/" + directory + "/" + name, cmdBuffer);
     if (texture)
-        return textureCache[name] = texture;
+        return textureCache[name] = std::move(texture);
     return textureCache["blank"];
 }

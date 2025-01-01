@@ -20,8 +20,8 @@ VulkanRayTracingApp::VulkanRayTracingApp(const AppEntry& entry, const std::tstri
     createDescriptorPool();
     createDescriptorSets();
     createUniformBuffers();
-    pipelineCache = std::make_shared<magma::PipelineCache>(device);
-    shaderReflectionFactory = std::make_shared<ShaderReflectionFactory>(device);
+    pipelineCache = std::make_unique<magma::PipelineCache>(device);
+    shaderReflectionFactory = std::make_unique<ShaderReflectionFactory>(device);
 }
 
 VulkanRayTracingApp::~VulkanRayTracingApp()
@@ -113,15 +113,15 @@ void VulkanRayTracingApp::createInstance()
             enabledExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
     #endif
     }
-    MAGMA_STACK_ARRAY(char, appName, caption.length() + 1);
+    std::vector<char> appName(caption.length() + 1);
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     size_t count = 0;
-    wcstombs_s(&count, appName, appName.size(), caption.c_str(), appName.size());
+    wcstombs_s(&count, appName.data(), appName.size(), caption.c_str(), appName.size());
 #else
-    strcpy(appName, caption.c_str());
+    strcpy(appName.data(), caption.c_str());
 #endif
     const magma::Application appInfo(
-        appName, 1,
+        appName.data(), 1,
         "Magma", 1,
         VK_API_VERSION_1_1);
 
@@ -136,7 +136,7 @@ void VulkanRayTracingApp::createInstance()
 #ifdef VK_EXT_debug_report
     if (instanceExtensions->EXT_debug_report)
     {
-        debugReportCallback = std::make_shared<magma::DebugReportCallback>(
+        debugReportCallback = std::make_unique<magma::DebugReportCallback>(
             instance, utilities::reportCallback);
     }
 #endif // VK_EXT_debug_report
@@ -144,8 +144,6 @@ void VulkanRayTracingApp::createInstance()
     physicalDevice = instance->getPhysicalDevice(0);
     const VkPhysicalDeviceProperties& properties = physicalDevice->getProperties();
     std::cout << "Running on " << properties.deviceName << "\n";
-
-    instanceExtensions = std::make_unique<magma::InstanceExtensions>();
     extensions = std::make_unique<magma::DeviceExtensions>(physicalDevice);
 }
 
@@ -224,11 +222,11 @@ void VulkanRayTracingApp::createLogicalDevice()
 void VulkanRayTracingApp::createSwapchain()
 {
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-    surface = std::make_shared<magma::Win32Surface>(instance, hInstance, hWnd);
+    surface = std::make_unique<magma::Win32Surface>(instance, hInstance, hWnd);
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)
-    surface = std::make_shared<magma::XlibSurface>(instance, dpy, window);
+    surface = std::make_unique<magma::XlibSurface>(instance, dpy, window);
 #elif defined(VK_USE_PLATFORM_XCB_KHR)
-    surface = std::make_shared<magma::XcbSurface>(instance, connection, window);
+    surface = std::make_unique<magma::XcbSurface>(instance, connection, window);
 #endif // VK_USE_PLATFORM_XCB_KHR
     const magma::DeviceQueueDescriptor graphicsQueueDesc(physicalDevice, VK_QUEUE_GRAPHICS_BIT);
     if (!physicalDevice->getSurfaceSupport(surface, graphicsQueueDesc.queueFamilyIndex))
@@ -304,10 +302,10 @@ void VulkanRayTracingApp::createSwapchain()
         backbufferFormat, surfaceCaps.currentExtent, 1,
         imageUsageFlags, preTransform, compositeAlpha, presentMode,
         initializer);
-    for (auto const& image: swapchain->getImages())
+    for (const auto& image: swapchain->getImages())
     {
-        std::shared_ptr<magma::ImageView> imageView(std::make_shared<magma::ImageView>(image));
-        swapchainImageViews.push_back(imageView);
+        std::shared_ptr<magma::ImageView> imageView = std::make_shared<magma::SharedImageView>(std::move(image));
+        swapchainImageViews.emplace_back(std::move(imageView));
     }
 }
 
@@ -323,7 +321,8 @@ void VulkanRayTracingApp::createFramebuffer()
 {
     for (auto const& attachment: swapchainImageViews)
     {
-        framebuffers.push_back(std::make_shared<magma::Framebuffer>(renderPass, attachment));
+        std::unique_ptr<magma::Framebuffer> framebuffer = std::make_unique<magma::Framebuffer>(renderPass, attachment);
+        framebuffers.emplace_back(std::move(framebuffer));
     }
 }
 
@@ -331,8 +330,8 @@ void VulkanRayTracingApp::createCommandBuffers()
 {
     graphicsQueue = device->getQueue(VK_QUEUE_GRAPHICS_BIT, 0);
     computeQueue = device->getQueue(VK_QUEUE_COMPUTE_BIT, 0);
-    commandPools[0] = std::make_shared<magma::CommandPool>(device, graphicsQueue->getFamilyIndex());
-    commandPools[1] = std::make_shared<magma::CommandPool>(device, computeQueue->getFamilyIndex());
+    commandPools[0] = std::make_unique<magma::CommandPool>(device, graphicsQueue->getFamilyIndex());
+    commandPools[1] = std::make_unique<magma::CommandPool>(device, computeQueue->getFamilyIndex());
     // Create draw command buffers
     commandBuffers = commandPools[0]->allocateCommandBuffers(static_cast<uint32_t>(framebuffers.size()), true);
     // Create image copy command buffer
@@ -344,7 +343,7 @@ void VulkanRayTracingApp::createCommandBuffers()
         transferQueue = device->getQueue(VK_QUEUE_TRANSFER_BIT, 0);
         if (transferQueue)
         {
-            commandPools[2] = std::make_shared<magma::CommandPool>(device, transferQueue->getFamilyIndex());
+            commandPools[2] = std::make_unique<magma::CommandPool>(device, transferQueue->getFamilyIndex());
             // Create buffer copy command buffer
             cmdBufferCopy = std::make_shared<magma::PrimaryCommandBuffer>(commandPools[2]);
         }
@@ -353,10 +352,13 @@ void VulkanRayTracingApp::createCommandBuffers()
 
 void VulkanRayTracingApp::createSyncPrimitives()
 {
-    presentFinished = std::make_shared<magma::Semaphore>(device);
-    renderFinished = std::make_shared<magma::Semaphore>(device);
+    presentFinished = std::make_unique<magma::Semaphore>(device);
+    renderFinished = std::make_unique<magma::Semaphore>(device);
     for (int i = 0; i < (int)commandBuffers.size(); ++i)
-        waitFences.push_back(std::make_unique<magma::Fence>(device, nullptr, VK_FENCE_CREATE_SIGNALED_BIT));
+    {
+        std::unique_ptr<magma::Fence> fence = std::make_unique<magma::Fence>(device, nullptr, VK_FENCE_CREATE_SIGNALED_BIT);
+        waitFences.emplace_back(std::move(fence));
+    }
 }
 
 void VulkanRayTracingApp::createDescriptorPool()
@@ -392,14 +394,14 @@ void VulkanRayTracingApp::createDescriptorSets()
 
 void VulkanRayTracingApp::createUniformBuffers()
 {
-    viewUniforms = std::make_shared<magma::UniformBuffer<View>>(device);
+    viewUniforms = std::make_unique<magma::UniformBuffer<View>>(device);
 }
 
-std::shared_ptr<magma::Buffer> VulkanRayTracingApp::allocateScratchBuffer(VkDeviceSize size)
+std::unique_ptr<magma::Buffer> VulkanRayTracingApp::allocateScratchBuffer(VkDeviceSize size)
 {
     magma::Buffer::Initializer initializer;
     initializer.deviceAddress = true;
-    return std::make_shared<magma::StorageBuffer>(device, size, nullptr, initializer);
+    return std::make_unique<magma::StorageBuffer>(device, size, nullptr, initializer);
 }
 
 void VulkanRayTracingApp::submitCommandBuffer(uint32_t bufferIndex)

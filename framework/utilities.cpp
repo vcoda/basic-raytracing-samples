@@ -9,8 +9,8 @@
 
 #include <vulkan/vulkan.h>
 
-#include "utilities.h"
 #include "magma/magma.h"
+#include "utilities.h"
 
 namespace utilities
 {
