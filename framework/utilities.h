@@ -41,6 +41,14 @@ namespace utilities
     }
 
     template<class T, std::size_t N>
+    inline std::unique_ptr<magma::AccelerationStructureInputBuffer> makeInputBuffer(const vector<T>& array,
+        std::shared_ptr<magma::CommandBuffer> cmdBuffer, std::shared_ptr<magma::Allocator> allocator = nullptr)
+    {
+        return std::make_unique<magma::AccelerationStructureInputBuffer>(std::move(cmdBuffer),
+            array.size_bytes(), array.data(), std::move(allocator));
+    }
+
+    template<class T, std::size_t N>
     inline std::unique_ptr<magma::StorageBuffer> makeStorageBuffer(const T (&array)[N],
         std::shared_ptr<magma::CommandBuffer> cmdBuffer, std::shared_ptr<magma::Allocator> allocator = nullptr)
     {
@@ -48,7 +56,7 @@ namespace utilities
     }
 
     template<class T>
-    inline std::unique_ptr<magma::StorageBuffer> makeStorageBuffer(const vector<T> array,
+    inline std::unique_ptr<magma::StorageBuffer> makeStorageBuffer(const vector<T>& array,
         std::shared_ptr<magma::CommandBuffer> cmdBuffer, std::shared_ptr<magma::Allocator> allocator = nullptr)
     {
         return std::make_unique<magma::StorageBuffer>(std::move(cmdBuffer), array.size_bytes(), array.data(), std::move(allocator));

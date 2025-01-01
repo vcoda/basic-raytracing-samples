@@ -96,7 +96,7 @@ public:
             std::cout << warn;
         if (error.length())
             std::cerr << error;
-        std::vector<rapid::float4> vertices;
+        vector<rapid::float4> vertices;
         const tinyobj::mesh_t& mesh = shapes.front().mesh;
         vertices.reserve(mesh.indices.size());
         for (const auto& index: mesh.indices)
