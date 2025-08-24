@@ -2,7 +2,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../third-party/stb/stb_image.h"
 
-std::unique_ptr<magma::ImageView> loadImage(const std::string& fileName, std::shared_ptr<magma::CommandBuffer> cmdBuffer)
+std::unique_ptr<magma::ImageView> loadImage(const std::string& fileName, magma::lent_ptr<magma::CommandBuffer> cmdBuffer, std::shared_ptr<magma::Allocator> allocator)
 {
     int width = 0, height = 0, channels = 0;
     unsigned char *data = stbi_load(fileName.c_str(), &width, &height, &channels, STBI_rgb_alpha);
@@ -14,15 +14,15 @@ std::unique_ptr<magma::ImageView> loadImage(const std::string& fileName, std::sh
         mip.extent.depth = 1;
         mip.texels = data;
         mip.size = width * height * sizeof(uint32_t);
-        std::unique_ptr<magma::Image2D> image = std::make_unique<magma::Image2D>(cmdBuffer, VK_FORMAT_R8G8B8A8_UNORM,
-            std::vector<magma::Image::MipData>{mip}, nullptr, magma::Image::Initializer{}, magma::Sharing(), memcpy);
+        std::unique_ptr<magma::Image2D> image = std::make_unique<magma::Image2D>(std::move(cmdBuffer), VK_FORMAT_R8G8B8A8_UNORM,
+            std::vector<magma::Image::MipData>{mip}, allocator);
         stbi_image_free(data);
-        return std::make_unique<magma::UniqueImageView>(std::move(image));
+        return std::make_unique<magma::UniqueImageView>(std::move(image), allocator->getHostAllocator());
     }
     return nullptr;
 }
 
-std::unique_ptr<magma::ImageView> loadBlankImage(std::shared_ptr<magma::CommandBuffer> cmdBuffer)
+std::unique_ptr<magma::ImageView> loadBlankImage(magma::lent_ptr<magma::CommandBuffer> cmdBuffer, std::shared_ptr<magma::Allocator> allocator)
 {
     const uint8_t blank[4] = {0, 0, 0, 0};
     magma::Image::MipData mip;
@@ -31,7 +31,7 @@ std::unique_ptr<magma::ImageView> loadBlankImage(std::shared_ptr<magma::CommandB
     mip.extent.depth = 1;
     mip.texels = blank;
     mip.size = sizeof(uint32_t);
-    std::unique_ptr<magma::Image2D> image = std::make_unique<magma::Image2D>(cmdBuffer, VK_FORMAT_R8G8B8A8_UNORM,
-        std::vector<magma::Image::MipData>{mip}, nullptr, magma::Image::Initializer{}, magma::Sharing(), memcpy);
-    return std::make_unique<magma::UniqueImageView>(std::move(image));
+    std::unique_ptr<magma::Image2D> image = std::make_unique<magma::Image2D>(std::move(cmdBuffer), VK_FORMAT_R8G8B8A8_UNORM,
+        std::vector<magma::Image::MipData>{mip}, allocator);
+    return std::make_unique<magma::UniqueImageView>(std::move(image), allocator->getHostAllocator());
 }

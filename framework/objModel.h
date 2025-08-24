@@ -15,7 +15,8 @@ class ObjMesh
 public:
     explicit ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
         const std::vector<tinyobj::material_t>& materials,
-        std::shared_ptr<magma::CommandBuffer> cmdBuffer,
+        const std::unique_ptr<magma::CommandBuffer>& cmdBuffer,
+        std::shared_ptr<magma::Allocator> allocator,
         bool calculateNormals, bool swapYZ);
     ObjMesh(ObjMesh&&) noexcept = default;
     ObjMesh& operator=(ObjMesh&&) noexcept = default;
@@ -43,7 +44,9 @@ struct ObjMaterial
 class ObjModel
 {
 public:
-    explicit ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBuffer> cmdBuffer,
+    explicit ObjModel(const std::string& fileName, 
+        const std::unique_ptr<magma::CommandBuffer>& cmdBuffer, 
+        std::shared_ptr<magma::Allocator> allocator,
         bool calculateNormals = false, bool swapYZ = false);
     const std::list<ObjMesh>& getMeshes() const noexcept { return meshes; }
     const std::list<ObjMaterial>& getMaterials() const noexcept { return materials; }
@@ -51,7 +54,7 @@ public:
 
 private:
     std::shared_ptr<magma::ImageView> loadTexture(const std::string& name, const std::string& directory,
-        std::shared_ptr<magma::CommandBuffer> cmdBuffer);
+        const std::unique_ptr<magma::CommandBuffer>& cmdBuffer, std::shared_ptr<magma::Allocator> allocator);
 
     std::list<ObjMesh> meshes;
     std::list<ObjMaterial> materials;

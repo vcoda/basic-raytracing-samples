@@ -25,8 +25,7 @@ private:
     virtual char translateKey(int code) const override;
     static LRESULT WINAPI wndProc(HWND, UINT, WPARAM, LPARAM);
 
-    static Win32App *self;
-    static DebugOutputStream dostream;
+    DebugOutputStream dostream;
     POINT lastPos = {0L, 0L};
     POINT currPos = {0L, 0L};
 };

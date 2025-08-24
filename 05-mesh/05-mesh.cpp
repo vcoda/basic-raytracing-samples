@@ -6,21 +6,21 @@
 
 class MeshApp : public VulkanRayTracingApp
 {
-    struct DescriptorSetTable: magma::DescriptorSetTable
+    struct DescriptorSetTable
     {
         magma::descriptor::UniformBuffer view = 0;
         magma::descriptor::AccelerationStructure topLevel = 1;
         magma::descriptor::StorageBuffer vertices = 2;
         magma::descriptor::UniformBuffer normalMatrix = 3;
-        MAGMA_REFLECT(view, topLevel, vertices, normalMatrix)
     } setTable;
 
-    magma::AccelerationStructureGeometryTriangles geometry;
-    magma::AccelerationStructureGeometryInstances geometryInstance;
+    magma::AccelerationStructureTriangles tris;
+    magma::AccelerationStructureInstances instance;
     std::unique_ptr<magma::AccelerationStructureInputBuffer> vertexBuffer;
     std::unique_ptr<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>> instanceBuffer;
     std::unique_ptr<magma::BottomLevelAccelerationStructure> bottomLevel;
     std::unique_ptr<magma::TopLevelAccelerationStructure> topLevel;
+    std::unique_ptr<magma::Buffer> scratchBuffer;
     std::unique_ptr<magma::UniformBuffer<rapid::matrix>> normalMatrix;
     std::unique_ptr<magma::DescriptorSet> descriptorSet;
     std::unique_ptr<magma::RayTracingPipeline> pipeline;
@@ -37,8 +37,8 @@ public:
         createUniformBuffer();
         setupDescriptorSet();
         setupPipeline();
-        recordCommandBuffer(Buffer::Front);
-        recordCommandBuffer(Buffer::Back);
+        for (size_t i = 0; i < commandBuffers.size(); ++i)
+            recordCommandBuffer(i);
         timer->run();
     }
 
@@ -109,22 +109,29 @@ public:
                 1.f);
         }
         vertexBuffer = utilities::makeInputBuffer(vertices, cmdBufferCopy, allocator);
-        geometry = magma::AccelerationStructureGeometryTriangles(VK_FORMAT_R32G32B32A32_SFLOAT, vertexBuffer.get());
+        constexpr VkFormat vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
+        const magma::DeviceFeatures::FormatFeatures features = physicalDevice->features()->supportsFormatFeatures(
+            vertexFormat, VK_FORMAT_FEATURE_ACCELERATION_STRUCTURE_VERTEX_BUFFER_BIT_KHR);
+        MAGMA_ASSERT(features.buffer);
+        if (features.buffer)
+            tris = magma::AccelerationStructureTriangles(vertexFormat, vertexBuffer.get(), sizeof(rapid::float4));
     }
 
     void createAccelerationStructures()
     {
         bottomLevel = std::make_unique<magma::BottomLevelAccelerationStructure>(device,
-            std::list<magma::AccelerationStructureGeometry>{geometry},
+            std::list<magma::AccelerationStructureGeometry>{tris},
             VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
-            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
-        instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device, 1);
-        geometryInstance = magma::AccelerationStructureGeometryInstances(instanceBuffer.get());
+            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+            allocator);
+        instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device,
+            1, allocator);
+        instance = magma::AccelerationStructureInstances(instanceBuffer.get());
         instanceBuffer->getInstance(0).accelerationStructureReference = bottomLevel->getReference();
-        topLevel = std::make_unique<magma::TopLevelAccelerationStructure>(device,
-            geometryInstance,
+        topLevel = std::make_unique<magma::TopLevelAccelerationStructure>(device, instance,
             VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
-            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR);
+            VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR | VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR,
+            allocator);
     }
 
     void buildAccelerationStructures()
@@ -138,12 +145,12 @@ public:
                 VK_PIPELINE_STAGE_TRANSFER_BIT,
                 VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
                 magma::barrier::memory::transferWriteAccelerationStructureRead);
-            cmdCompute->buildAccelerationStructure(bottomLevel, {geometry}, scratchBuffer);
+            cmdCompute->buildAccelerationStructure(bottomLevel, {tris}, scratchBuffer);
             cmdCompute->pipelineBarrier(
                 VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
                 VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
                 magma::barrier::memory::accelerationStructureWriteRead);
-            cmdCompute->buildAccelerationStructure(topLevel, geometryInstance, scratchBuffer);
+            cmdCompute->buildAccelerationStructure(topLevel, instance, scratchBuffer);
         }
         cmdCompute->end();
         magma::finish(cmdCompute, computeQueue);
@@ -151,7 +158,7 @@ public:
 
     void createUniformBuffer()
     {
-        normalMatrix = std::make_unique<magma::UniformBuffer<rapid::matrix>>(device);
+        normalMatrix = std::make_unique<magma::UniformBuffer<rapid::matrix>>(device, allocator);
     }
 
     void setupDescriptorSet()
@@ -161,7 +168,7 @@ public:
         setTable.vertices = vertexBuffer;
         setTable.normalMatrix = normalMatrix;
         descriptorSet = std::make_unique<magma::DescriptorSet>(descriptorPool, setTable,
-            VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR);
+            VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, hostAllocator);
     }
 
     void setupPipeline()
@@ -175,17 +182,19 @@ public:
             {
                 descriptorSet->getLayout(),
                 swapchainDescriptorSets.front()->getLayout(),
-            }));
+            }, hostAllocator));
+        constexpr uint32_t maxRecursionDepth = 1;
         pipeline = std::unique_ptr<magma::RayTracingPipeline>(new RayTracingPipeline(device,
-            {"trace", "hit", "miss"}, shaderGroups, 1, std::move(layout)));
+            {"trace", "hit", "miss"}, shaderGroups, maxRecursionDepth,
+            std::move(layout), hostAllocator));
         // Light pos
         shaderBindingTable.addShaderRecord(VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR, 1, rapid::float3(-100, 200, 100));
         // Background color
         shaderBindingTable.addShaderRecord(VK_SHADER_STAGE_MISS_BIT_KHR, 2, rapid::float3(0.35f, 0.53f, 0.7f));
-        shaderBindingTable.build(pipeline, cmdBufferCopy);
+        shaderBindingTable.build(pipeline, cmdBufferCopy, allocator);
     }
 
-    void recordCommandBuffer(uint32_t index)
+    void recordCommandBuffer(size_t index)
     {
         std::shared_ptr<magma::CommandBuffer>& cmdBuffer = commandBuffers[index];
         magma::Image *backBuffer = swapchainImageViews[index]->getImage();
@@ -197,7 +206,7 @@ public:
                 VK_PIPELINE_STAGE_TRANSFER_BIT,
                 VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
                 magma::barrier::memory::transferWriteAccelerationStructureRead);
-            cmdBuffer->updateAccelerationStructure(topLevel, geometryInstance, scratchBuffer);
+            cmdBuffer->updateAccelerationStructure(topLevel, instance, scratchBuffer);
             cmdBuffer->pipelineBarrier(
                 VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
                 VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR,

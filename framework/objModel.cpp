@@ -9,7 +9,8 @@
 
 ObjMesh::ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
     const std::vector<tinyobj::material_t>& materials,
-    std::shared_ptr<magma::CommandBuffer> cmdBuffer,
+    const std::unique_ptr<magma::CommandBuffer>& cmdBuffer,
+    std::shared_ptr<magma::Allocator> allocator,
     bool calculateNormals, bool swapYZ)
 {
     const int i1 = swapYZ ? 2 : 1;
@@ -66,10 +67,10 @@ ObjMesh::ObjMesh(const tinyobj::mesh_t& mesh, const tinyobj::attrib_t& attrib,
         calculateVertexNormals(indexedVertices.getVertices(), indexedVertices.getIndices());
     vertexBuffer = std::make_unique<magma::AccelerationStructureInputBuffer>(cmdBuffer,
         indexedVertices.getVertices().size_bytes(),
-        indexedVertices.getVertices().data());
-    indexBuffer = std::make_unique<magma::AccelerationStructureInputBuffer>(std::move(cmdBuffer),
+        indexedVertices.getVertices().data(), allocator);
+    indexBuffer = std::make_unique<magma::AccelerationStructureInputBuffer>(cmdBuffer,
         indexedVertices.getIndices().size_bytes(),
-        indexedVertices.getIndices().data());
+        indexedVertices.getIndices().data(), std::move(allocator));
 }
 
 void ObjMesh::calculateVertexNormals(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const
@@ -102,8 +103,8 @@ void ObjMesh::calculateVertexNormals(std::vector<Vertex>& vertices, const std::v
     }
 }
 
-ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBuffer> cmdBuffer,
-    bool calculateNormals /* false */, bool swapYZ /* false */)
+ObjModel::ObjModel(const std::string& fileName, const std::unique_ptr<magma::CommandBuffer>& cmdBuffer,
+    std::shared_ptr<magma::Allocator> allocator, bool calculateNormals /* false */, bool swapYZ /* false */)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -130,49 +131,51 @@ ObjModel::ObjModel(const std::string& fileName, std::shared_ptr<magma::CommandBu
     std::list<magma::AccelerationStructureGeometry> geometries;
     for (const tinyobj::shape_t& shape: shapes)
     {
-        ObjMesh mesh(shape.mesh, attrib, materials, cmdBuffer, calculateNormals, swapYZ);
-        magma::AccelerationStructureGeometryTriangles triangles(
+        ObjMesh mesh(shape.mesh, attrib, materials, cmdBuffer, allocator, calculateNormals, swapYZ);
+        magma::AccelerationStructureIndexedTriangles tris(
             VK_FORMAT_R32G32B32_SFLOAT, mesh.getVertexBuffer().get(),
-            VK_INDEX_TYPE_UINT32, mesh.getIndexBuffer().get());
-        triangles.geometry.triangles.vertexStride = sizeof(Vertex);
-        triangles.geometry.triangles.maxVertex = static_cast<uint32_t>(mesh.getVertexBuffer()->getSize() / sizeof(Vertex));
-        geometries.push_back(triangles);
+            VK_INDEX_TYPE_UINT32, mesh.getIndexBuffer().get(),
+            sizeof(Vertex));
+        geometries.push_back(tris);
         meshes.emplace_back(std::move(mesh));
     }
     // Create BLAS for all geometries
     bottomLevel = std::make_shared<magma::BottomLevelAccelerationStructure>(cmdBuffer->getDevice(),
         geometries,
         VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
-        VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
+        VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+        allocator);
     // Allocate scratch buffer
-    magma::Buffer::Initializer initializer;
-    initializer.deviceAddress = true;
-    std::shared_ptr<magma::Buffer> scratchBuffer = std::make_shared<magma::StorageBuffer>(
-        cmdBuffer->getDevice(), bottomLevel->getBuildScratchSize(), nullptr, initializer);
-    cmdBuffer->reset();
-    cmdBuffer->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-    {   // Build BLAS on device
-        cmdBuffer->buildAccelerationStructure(bottomLevel, geometries, scratchBuffer);
+    std::unique_ptr<magma::Buffer> scratchBuffer = std::make_unique<magma::AccelerationStructureStorageBuffer>(
+        cmdBuffer->getDevice(), bottomLevel->getBuildScratchSize(), 
+        VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, allocator);
+    if (cmdBuffer->reset())
+    {
+        if (cmdBuffer->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT))
+        {   // Build BLAS on device
+            cmdBuffer->buildAccelerationStructure(bottomLevel, geometries, scratchBuffer);
+            cmdBuffer->end();
+            // Block until execution is complete
+            magma::finish(cmdBuffer);
+        }
     }
-    cmdBuffer->end();
-    magma::finish(cmdBuffer);
     // Load materials
-    textureCache["blank"] = loadBlankImage(cmdBuffer);
+    textureCache["blank"] = loadBlankImage(cmdBuffer, allocator);
     for (const tinyobj::material_t& mat: materials)
     {
         ObjMaterial material;
-        material.ambientMap = loadTexture(mat.ambient_texname, directory, cmdBuffer);
-        material.diffuseMap = loadTexture(mat.diffuse_texname, directory, cmdBuffer);
-        material.specularMap = loadTexture(mat.specular_texname, directory, cmdBuffer);
-        material.bumpMap = loadTexture(mat.bump_texname, directory, cmdBuffer);
-        material.alphaMap = loadTexture(mat.alpha_texname, directory, cmdBuffer);
-        material.reflectionMap = loadTexture(mat.reflection_texname, directory, cmdBuffer);
+        material.ambientMap = loadTexture(mat.ambient_texname, directory, cmdBuffer, allocator);
+        material.diffuseMap = loadTexture(mat.diffuse_texname, directory, cmdBuffer, allocator);
+        material.specularMap = loadTexture(mat.specular_texname, directory, cmdBuffer, allocator);
+        material.bumpMap = loadTexture(mat.bump_texname, directory, cmdBuffer, allocator);
+        material.alphaMap = loadTexture(mat.alpha_texname, directory, cmdBuffer, allocator);
+        material.reflectionMap = loadTexture(mat.reflection_texname, directory, cmdBuffer, allocator);
         this->materials.push_back(material);
     }
 }
 
 std::shared_ptr<magma::ImageView> ObjModel::loadTexture(const std::string& name, const std::string& directory,
-    std::shared_ptr<magma::CommandBuffer> cmdBuffer)
+    const std::unique_ptr<magma::CommandBuffer>& cmdBuffer, std::shared_ptr<magma::Allocator> allocator)
 {
     if (name.empty())
         return textureCache["blank"];
@@ -180,7 +183,7 @@ std::shared_ptr<magma::ImageView> ObjModel::loadTexture(const std::string& name,
     auto it = textureCache.find(name);
     if (it != textureCache.end())
         return it->second;
-    std::unique_ptr<magma::ImageView> texture = loadImage("../assets/meshes/" + directory + "/" + name, cmdBuffer);
+    std::unique_ptr<magma::ImageView> texture = loadImage("../assets/meshes/" + directory + "/" + name, cmdBuffer, std::move(allocator));
     if (texture)
         return textureCache[name] = std::move(texture);
     return textureCache["blank"];

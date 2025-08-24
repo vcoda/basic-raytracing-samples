@@ -36,7 +36,6 @@ typedef XcbApp PlatformApp;
 class VulkanRayTracingApp : public PlatformApp
 {
 public:
-    enum Buffer : uint8_t;
     enum class PresentationWait : uint8_t;
 
     struct View
@@ -70,38 +69,37 @@ protected:
     void submitCopyImageCommands();
     void submitCopyBufferCommands();
 
-    std::shared_ptr<magma::Allocator> allocator;
-    std::shared_ptr<magma::Instance> instance;
+    std::shared_ptr<magma::IAllocator> hostAllocator;
+    std::unique_ptr<magma::Instance> instance;
     std::unique_ptr<magma::DebugReportCallback> debugReportCallback;
     std::unique_ptr<magma::Surface> surface;
     std::shared_ptr<magma::PhysicalDevice> physicalDevice;
     std::shared_ptr<magma::Device> device;
+    std::shared_ptr<magma::Allocator> allocator;
     std::unique_ptr<magma::Swapchain> swapchain;
     std::unique_ptr<magma::InstanceExtensions> instanceExtensions;
     std::unique_ptr<magma::DeviceExtensions> extensions;
     std::vector<std::shared_ptr<magma::ImageView>> swapchainImageViews;
-    std::shared_ptr<magma::RenderPass> renderPass;
+    std::unique_ptr<magma::RenderPass> renderPass;
     std::vector<std::unique_ptr<magma::Framebuffer>> framebuffers;
 
     std::unique_ptr<magma::CommandPool> commandPools[3];
     std::vector<std::shared_ptr<magma::CommandBuffer>> commandBuffers;
-    std::shared_ptr<magma::CommandBuffer> cmdImageCopy;
-    std::shared_ptr<magma::CommandBuffer> cmdBufferCopy;
-    std::shared_ptr<magma::CommandBuffer> cmdCompute;
+    std::unique_ptr<magma::CommandBuffer> cmdImageCopy;
+    std::unique_ptr<magma::CommandBuffer> cmdBufferCopy;
+    std::unique_ptr<magma::CommandBuffer> cmdCompute;
 
     std::shared_ptr<magma::Queue> graphicsQueue;
     std::shared_ptr<magma::Queue> computeQueue;
     std::shared_ptr<magma::Queue> transferQueue;
-    std::unique_ptr<magma::Semaphore> presentFinished;
-    std::unique_ptr<magma::Semaphore> renderFinished;
+    std::vector<std::unique_ptr<magma::Semaphore>> presentFinished;
+    std::vector<std::unique_ptr<magma::Semaphore>> renderFinished;
     std::vector<std::unique_ptr<magma::Fence>> waitFences;
     const std::unique_ptr<magma::Fence> nullFence;
-    const std::unique_ptr<magma::Fence> *waitFence;
 
     std::shared_ptr<magma::DescriptorPool> descriptorPool;
-    std::vector<std::shared_ptr<magma::DescriptorSet>> swapchainDescriptorSets;
+    std::vector<std::unique_ptr<magma::DescriptorSet>> swapchainDescriptorSets;
     std::unique_ptr<magma::UniformBuffer<View>> viewUniforms;
-    std::unique_ptr<magma::Buffer> scratchBuffer;
 
     std::unique_ptr<magma::PipelineCache> pipelineCache;
     std::unique_ptr<ShaderReflectionFactory> shaderReflectionFactory;
@@ -110,20 +108,15 @@ protected:
     VkSurfaceFormatKHR backbufferFormat;
     bool vSync;
     PresentationWait presentWait;
-    uint32_t bufferIndex;
     uint32_t frameIndex;
+    uint32_t bufferIndex;
+    uint32_t frameCount;
 
 private:
-    struct SwapchainImageTable : magma::DescriptorSetTable
+    struct SwapchainImageDescriptorTable
     {
         magma::descriptor::StorageImage output = 0;
-        MAGMA_REFLECT(output)
     } swapchainImageTables[3];
-};
-
-enum VulkanRayTracingApp::Buffer : uint8_t
-{
-    Front, Back
 };
 
 enum class VulkanRayTracingApp::PresentationWait : uint8_t
