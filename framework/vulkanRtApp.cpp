@@ -73,6 +73,8 @@ void VulkanRayTracingApp::onPaint()
     // Round robin frame-in-flight
     frameIndex = (frameIndex + 1) % swapchain->getImageCount();
     ++frameCount;
+    // Check that all allocations go through VMA
+    assert(0 == magma::DeviceMemory::getAllocationCount());
 }
 
 void VulkanRayTracingApp::createInstance()
