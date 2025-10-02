@@ -50,12 +50,6 @@ void VulkanRayTracingApp::onPaint()
     {
     case PresentationWait::Fence:
         waitFences[frameIndex]->wait();
-        /*
-        if (waitFence)
-        {
-            (*waitFence)->wait();
-            graphicsQueue->onIdle();
-        } */
         break;
     case PresentationWait::Queue:
         graphicsQueue->waitIdle();
