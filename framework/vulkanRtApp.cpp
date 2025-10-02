@@ -363,8 +363,8 @@ void VulkanRayTracingApp::createSyncPrimitives()
 {
     for (uint32_t i = 0; i < swapchain->getImageCount(); ++i)
     {
-        presentFinished.push_back(std::make_unique<magma::Semaphore>(device, hostAllocator));
-        renderFinished.push_back(std::make_unique<magma::Semaphore>(device, hostAllocator));
+        presentFinished.emplace_back(std::make_unique<magma::Semaphore>(device, hostAllocator));
+        renderFinished.emplace_back(std::make_unique<magma::Semaphore>(device, hostAllocator));
         waitFences.emplace_back(std::make_unique<magma::Fence>(device, hostAllocator, VK_FENCE_CREATE_SIGNALED_BIT));
     }
 }
