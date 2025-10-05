@@ -17,11 +17,11 @@ void main()
         0, // sbtRecordOffset
         0, // sbtRecordStride
         0, // missIndex
-        vec3(pos, -1), // origin 
-        0, // tmin 
+        vec3(pos, -1), // origin
+        0, // tmin
         vec3(0, 0, 1), // dir
         2, // tmax
         0); // payload
-    
+
     imageStore(backBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.));
 }

@@ -112,7 +112,7 @@ public:
     {
         setTable.view = viewUniforms;
         setTable.topLevel = topLevel;
-        descriptorSet = std::make_unique<magma::DescriptorSet>(descriptorPool, setTable, 
+        descriptorSet = std::make_unique<magma::DescriptorSet>(descriptorPool, setTable,
             VK_SHADER_STAGE_RAYGEN_BIT_KHR, hostAllocator);
     }
 
@@ -130,7 +130,7 @@ public:
             }, hostAllocator));
         constexpr uint32_t maxRecursionDepth = 1;
         pipeline = std::unique_ptr<magma::RayTracingPipeline>(new RayTracingPipeline(device,
-            {"trace", "miss", "hit", "raySphere"}, shaderGroups, maxRecursionDepth, 
+            {"trace", "miss", "hit", "raySphere"}, shaderGroups, maxRecursionDepth,
             std::move(layout), hostAllocator));
         shaderBindingTable.build(pipeline, cmdBufferCopy, allocator);
     }

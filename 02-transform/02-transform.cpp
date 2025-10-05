@@ -90,7 +90,7 @@ public:
             VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
             VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
             allocator);
-        instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device, 
+        instanceBuffer = std::make_unique<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>>(device,
             1, allocator);
         instance = magma::AccelerationStructureInstances(instanceBuffer.get());
         instanceBuffer->getInstance(0).accelerationStructureReference = bottomLevel->getReference();
@@ -144,7 +144,7 @@ public:
             }, hostAllocator));
         constexpr uint32_t maxRecursionDepth = 1;
         pipeline = std::unique_ptr<magma::RayTracingPipeline>(new RayTracingPipeline(device,
-            {"trace", "hit", "miss"}, shaderGroups, maxRecursionDepth, 
+            {"trace", "hit", "miss"}, shaderGroups, maxRecursionDepth,
             std::move(layout), hostAllocator));
         shaderBindingTable.build(pipeline, cmdBufferCopy, allocator);
     }

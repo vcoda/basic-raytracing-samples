@@ -147,7 +147,7 @@ ObjModel::ObjModel(const std::string& fileName, const std::unique_ptr<magma::Com
         allocator);
     // Allocate scratch buffer
     std::unique_ptr<magma::Buffer> scratchBuffer = std::make_unique<magma::AccelerationStructureStorageBuffer>(
-        cmdBuffer->getDevice(), bottomLevel->getBuildScratchSize(), 
+        cmdBuffer->getDevice(), bottomLevel->getBuildScratchSize(),
         VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, allocator);
     if (cmdBuffer->reset())
     {

@@ -106,7 +106,7 @@ public:
             }, hostAllocator));
         constexpr uint32_t maxRecursionDepth = 1;
         pipeline = std::unique_ptr<magma::RayTracingPipeline>(new RayTracingPipeline(device,
-            {"trace", "hit", "miss"}, shaderGroups, maxRecursionDepth, 
+            {"trace", "hit", "miss"}, shaderGroups, maxRecursionDepth,
             std::move(layout), hostAllocator));
         shaderBindingTable.build(pipeline, commandBuffers[0], allocator);
     }

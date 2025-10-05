@@ -108,7 +108,7 @@ void VulkanRayTracingApp::createInstance()
             enabledExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
     #endif
     }
-    
+
     std::vector<char> appName(caption.length() + 1);
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     size_t count = 0;

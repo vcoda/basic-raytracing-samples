@@ -44,8 +44,8 @@ struct ObjMaterial
 class ObjModel
 {
 public:
-    explicit ObjModel(const std::string& fileName, 
-        const std::unique_ptr<magma::CommandBuffer>& cmdBuffer, 
+    explicit ObjModel(const std::string& fileName,
+        const std::unique_ptr<magma::CommandBuffer>& cmdBuffer,
         std::shared_ptr<magma::Allocator> allocator,
         bool calculateNormals = false, bool swapYZ = false);
     const std::list<ObjMesh>& getMeshes() const noexcept { return meshes; }
