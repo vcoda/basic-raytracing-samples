@@ -2,20 +2,24 @@ CC=g++
 GLSLC=$(VULKAN_SDK)/bin/glslangValidator
 
 PLATFORM=VK_USE_PLATFORM_XCB_KHR
+#PLATFORM=VK_USE_PLATFORM_XLIB_KHR
 THIRD_PARTY=../third-party
 INCLUDE_DIR=-I$(VULKAN_SDK)/include -I$(THIRD_PARTY) -I$(THIRD_PARTY)/magma/src/third-party/pfr/include -I$(THIRD_PARTY)/rapid
-LIB_DIR=-L$(VULKAN_SDK)/lib -L$(THIRD_PARTY)/magma
+LIB_DIR=-L$(VULKAN_SDK)/lib -L$(THIRD_PARTY)/magma -L$(THIRD_PARTY)/quadric
 
 BASE_CFLAGS=-std=c++17 -m64 -msse4 -pthread -MD -D$(PLATFORM) $(INCLUDE_DIR)
 DEBUG ?= 1
 ifeq ($(DEBUG), 1)
 	CFLAGS=$(BASE_CFLAGS) -O0 -g -D_DEBUG
 	MAGMA=magmad
+	QUADRIC=quadricd
 else
 	CFLAGS=$(BASE_CFLAGS) -O3 -DNDEBUG
 	MAGMA=magma
+	QUADRIC=quadric
 endif
-LDFLAGS=$(LIB_DIR) -l$(MAGMA) -lpthread -lxcb -lvulkan
+LDFLAGS=$(LIB_DIR) -l$(MAGMA) -lpthread -lxcb -lxcb-randr -lvulkan
+#LDFLAGS=$(LIB_DIR) -l$(MAGMA) -lpthread -lX11 -lXrandr -lvulkan
 
 FRAMEWORK=../framework
 FRAMEWORK_OBJS= \
@@ -26,6 +30,7 @@ FRAMEWORK_OBJS= \
 	$(FRAMEWORK)/utilities.o \
 	$(FRAMEWORK)/vulkanRtApp.o \
 	$(FRAMEWORK)/xcbApp.o
+#$(FRAMEWORK)/xlibApp.o
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
