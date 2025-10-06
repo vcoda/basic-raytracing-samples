@@ -17,9 +17,8 @@ std::string format(const char *what,
     oss << what;
 #ifdef MAGMA_DEBUG
     if (where.file_name())
-        oss << std::endl << std::endl <<
-        "file: " << where.file_name() << std::endl <<
-        "line: " << where.line();
+        oss << std::endl << std::endl
+        << where.file_name() << ", line " << where.line();
 #else
     MAGMA_UNUSED(where);
 #endif // MAGMA_DEBUG
@@ -27,18 +26,16 @@ std::string format(const char *what,
 }
 
 template<class Error>
-std::string formatError(Error error, const char *what,
-    const magma::exception::source_location& where)
+std::string formatError(const Error& error)
 {
     std::ostringstream oss;
-    oss << error << std::endl << what;
+    oss << error.result() << std::endl
+        << error.what() << std::endl << std::endl
+        << error.description();
 #ifdef MAGMA_DEBUG
-    if (where.file_name())
-        oss << std::endl << std::endl <<
-        "file: " << where.file_name() << std::endl <<
-        "line: " << where.line();
-#else
-    MAGMA_UNUSED(where);
+    if (error.where().file_name())
+        oss << std::endl << std::endl
+        << error.where().file_name() << ", line " << error.where().line();
 #endif // MAGMA_DEBUG
     return oss.str();
 }
@@ -73,12 +70,12 @@ void runAppWithExceptionHandling(const AppEntry& entry) try
 }
 catch (const magma::exception::Error& exc)
 {
-    std::string message = formatError(exc.result(), exc.what(), exc.where());
+    std::string message = formatError(exc);
     onError(message, "Vulkan");
 }
 catch (const magma::exception::ReflectionError& exc)
 {
-    std::string message = formatError(exc.result(), exc.what(), exc.where());
+    std::string message = formatError(exc);
     onError(message, "SPIRV-Reflect");
 }
 catch (const magma::exception::Exception& exc)
