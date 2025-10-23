@@ -86,6 +86,7 @@
     <ClInclude Include="rayTracingPipeline.h" />
     <ClInclude Include="shaderReflectionFactory.h" />
     <ClInclude Include="shaders\brdf.h" />
+    <ClInclude Include="shaders\derivatives.h" />
     <ClInclude Include="shaders\interpolate.h" />
     <ClInclude Include="shaders\sRGB.h" />
     <ClInclude Include="shaders\triangleAttribs.h" />

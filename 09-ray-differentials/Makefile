@@ -1,0 +1,13 @@
+include ../Makeshared.mk
+
+default: 09-ray-differentials shaders
+
+09-ray-differentials: 09-ray-differentials.o debugImages.o $(FRAMEWORK_OBJS)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+shaders: trace.spv hit.spv miss.spv
+
+clean:
+	@find . -iregex '.*\.\(d\|o\)' -delete
+	@find $(FRAMEWORK) -iregex '.*\.\(d\|o\)' -delete
+	@rm -rf 09-ray-differentials

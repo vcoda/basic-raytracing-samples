@@ -72,6 +72,9 @@
     <ClInclude Include="objModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="shaders\derivatives.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
