@@ -189,6 +189,18 @@ Uses shader binding table (SBT) to assign dedicated hit shader for each object i
 unique shading behaviour.
 <br><br><br><br>
 
+
+### [09 - Ray differentials](09-ray-differentials/)
+<img src="./screenshots/ray-differentials.png" height="128px" align="left">
+One of the problem with ray-tracing is that screen-space derivatives (dFdx, dFdy) are not available, making texture minification filter a no-op.
+Usually samples (e. g. RTX from Nvidia) simply select first LOD when sampling textures, thus rendering images without tri-linear or anisotropic filtration.
+This sample shows that tri-linear filtering is possible at least for primary rays. To achieve this, we compute directions of two adjacent rays
+during ray generation. In the hit shader, we compute 3D derivatives of these rays using formula provided by Inigo Quilez
+[ray differentias and texturing](https://iquilezles.org/articles/filteringrm). Once we have those differences in world space we need to map them
+to texture space. This is performed by projecting vector to triangle's magnitude axis. The shader implements two approaches for sampling the texture:
+using explicit gradients or calculating texture level-of-detail and blending two nearest LODs. While this approach may not be universal, it gives a good 
+starting point for further research in this field.
+
 ## Credits
 This framework uses a few third-party libraries:
 
