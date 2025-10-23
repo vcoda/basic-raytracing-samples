@@ -12,6 +12,7 @@ basic-raytracing-samples:
 	$(MAKE) -C 06-model
 	$(MAKE) -C 07-texture-mapping
 	$(MAKE) -C 08-shader-binding-table
+	$(MAKE) -C 09-ray-differentials
 
 magma:
 	$(MAKE) -C $(MAGMA)
@@ -26,3 +27,4 @@ clean:
 	$(MAKE) -C 06-model clean
 	$(MAKE) -C 07-texture-mapping clean
 	$(MAKE) -C 08-shader-binding-table clean
+	$(MAKE) -C 09-ray-differentials clean
