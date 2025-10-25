@@ -4,14 +4,8 @@
 #include "interpolate.h"
 #include "derivatives.h"
 
-//#define USE_EXPLICIT_GRADIENTS
 //#define DEBUG_MIPMAP
-
-#ifdef USE_EXPLICIT_GRADIENTS
-    #define textureFilter trilinearGrad
-#else
-    #define textureFilter trilinearLod
-#endif
+//#define PSEUDO_INVERSE_JACOBIAN
 
 #ifdef DEBUG_MIPMAP
     #define TEXTURE mipmap
@@ -51,34 +45,24 @@ layout(location = 0) rayPayloadInEXT Payload payload;
 
 hitAttributeEXT vec2 hit;
 
-vec4 trilinearGrad(sampler2D image, vec2 uv, vec3 normal, vec3 rdx, vec3 rdy, float scale)
+vec4 textureGrad2D(sampler2D image, vec2 uv, vec3 normal, vec3 rdx, vec3 rdy,
+    vec3 dp1, vec3 dp2, vec2 duv1, vec2 duv2)
 {
-    vec3 dpdx, dpdy; 
+    vec3 dpdx, dpdy;
     dPdxy(rdx, rdy, normal, dpdx, dpdy);
-    vec2 duvdx = magProj(dpdx, normal);
-    vec2 duvdy = magProj(dpdy, normal);
-    return textureGrad(image, uv, duvdx * scale, duvdy * scale);
+#ifdef PSEUDO_INVERSE_JACOBIAN
+    mat3x2 invJ = pseudoInverseJacobian(dp1, dp2, duv1, duv2);
+#else
+    mat3x3 J = jacobian(dp1, dp2, duv1, duv2);
+    mat3x3 invJ = inverse(J);
+#endif
+    vec2 duvdx = (invJ * dpdx).xy;
+    vec2 duvdy = (invJ * dpdy).xy;
+    return textureGrad(image, uv, duvdx, duvdy);
 }
 
-vec4 trilinearLod(sampler2D image, vec2 uv, vec3 normal, vec3 rdx, vec3 rdy, float scale)
-{
-    vec3 dpdx, dpdy; 
-    dPdxy(rdx, rdy, normal, dpdx, dpdy);
-    vec2 duvdx = magProj(dpdx, normal);
-    vec2 duvdy = magProj(dpdy, normal);
-    float rhox = length(duvdx);
-    float rhoy = length(duvdy);
-    float rho = max(rhox, rhoy) * scale;
-    ivec2 size = textureSize(image, 0);
-    float lod = log2(rho * max(size.x, size.y));
-    float lod0 = floor(lod);
-    float lod1 = lod0 + 1;
-    vec4 col0 = textureLod(image, uv, lod0);
-    vec4 col1 = textureLod(image, uv, lod1);
-    return mix(col0, col1, fract(lod));
-}
-
-void loadTriangleAttributes(out vec3 normal, out vec2 uv)
+void loadTriangleAttributes(out vec3 normal, out vec2 uv,
+    out vec3 dp1, out vec3 dp2, out vec2 duv1, out vec2 duv2)
 {
     uint i = gl_PrimitiveID * 3;
     uvec3 tri;
@@ -96,15 +80,19 @@ void loadTriangleAttributes(out vec3 normal, out vec2 uv)
     vec2 uv2 = vec2(v2.u, v2.v);
     normal = interpolate(n0, n1, n2, hit.x, hit.y);
     uv = interpolate(uv0, uv1, uv2, hit.x, hit.y);
+    dp1 = v1.pos - v0.pos;
+    dp2 = v2.pos - v0.pos;
+    duv1 = uv1 - uv0;
+    duv2 = uv2 - uv0;
 }
 
 void main()
 {
-    vec3 normal;
-    vec2 uv;
-    loadTriangleAttributes(normal, uv);
+    vec3 normal, dp1, dp2;
+    vec2 uv, duv1, duv2;
+    loadTriangleAttributes(normal, uv, dp1, dp2, duv1, duv2);
     if (useFiltering)
-        payload.color = textureFilter(TEXTURE, uv, normalize(normal), payload.rdx, payload.rdy, 0.25).SWIZZLE;
+        payload.color = textureGrad2D(TEXTURE, uv, normalize(normal), payload.rdx, payload.rdy, dp1, dp2, duv1, duv2).SWIZZLE;
     else
         payload.color = texture(TEXTURE, uv).SWIZZLE;
 }

@@ -18,31 +18,23 @@ layout(set = 1, binding = 0, rgba8) uniform writeonly image2D backBuffer;
 
 layout(location = 0) rayPayloadEXT Payload payload;
 
-vec3 calcRayDifferential(vec3 origin, vec2 xy, vec2 dv,mat4x4 viewInv, mat4x4 projInv)
+vec3 calcRayDir(vec2 p, vec2 v, mat4x4 viewProjInv)
 {
-    vec2 p = (xy + dv) * 2 - 1;
-    // unproject
-    vec4 v = projInv * vec4(p, -1, 1);
-    v /= v.w;
-    vec3 target = (viewInv * v).xyz;
-    return normalize(target - origin);
+    p = (p + v) / gl_LaunchSizeEXT.xy * 2 - 1;
+    return (viewProjInv * vec4(p, 0, 1)).xyz;
 }
 
 void main()
 {
     vec2 fragPos = gl_LaunchIDEXT.xy + 0.5;
-    vec2 nxy = fragPos / gl_LaunchSizeEXT.xy * 2 - 1;
     vec4 origin = viewInv * vec4(0, 0, 0, 1);
-    vec4 dir = viewProjInv * vec4(nxy, 0, 1);
+    vec3 dir = calcRayDir(fragPos, vec2(0, 0), viewProjInv);
 
-    vec2 xy = fragPos / gl_LaunchSizeEXT.xy;
-    float dx = 1.0 / gl_LaunchSizeEXT.x;
-    float dy = 1.0 / gl_LaunchSizeEXT.y;
-    payload.rdx = calcRayDifferential(origin.xyz, xy, vec2(dx, 0), viewInv, projInv);
-    payload.rdy = calcRayDifferential(origin.xyz, xy, vec2(0, dy), viewInv, projInv);
+    payload.rdx = calcRayDir(fragPos, vec2(1, 0), viewProjInv);
+    payload.rdy = calcRayDir(fragPos, vec2(0, 1), viewProjInv);
     payload.color = vec3(0.0);
 
-    float tmin = 0.01, tmax = 100;
+    float tmin = 0.01, tmax = 10;
     traceRayEXT(topLevel,
         gl_RayFlagsOpaqueEXT,
         0xFF, // cullMask
@@ -50,7 +42,7 @@ void main()
         0, // sbtRecordStride
         0, // missIndex
         origin.xyz, tmin,
-        normalize(dir.xyz), tmax,
+        normalize(dir), tmax,
         0); // payload
 
     imageStore(backBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(payload.color, 1));

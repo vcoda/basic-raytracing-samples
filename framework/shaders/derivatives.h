@@ -2,30 +2,34 @@
 #define derivatives_h
 
 // https://iquilezles.org/articles/filteringrm/
-void dPdxy(vec3 rdx, vec3 rdy, vec3 n,
-    out vec3 dpdx, out vec3 dpdy)
+void dPdxy(vec3 rdx, vec3 rdy, vec3 n, out vec3 dpdx, out vec3 dpdy)
 {
     float NdD = dot(n, gl_WorldRayDirectionEXT.xyz);
     dpdx = gl_RayTmaxEXT * (rdx * NdD / dot(rdx, n) - gl_WorldRayDirectionEXT.xyz);
     dpdy = gl_RayTmaxEXT * (rdy * NdD / dot(rdy, n) - gl_WorldRayDirectionEXT.xyz);
 }
 
-#define PLANE_XY 0
-#define PLANE_XZ 1
-#define PLANE_YZ 2
-
-int magPlane(vec3 n)
+mat3x3 jacobian(vec3 dp1, vec3 dp2, vec2 duv1, vec2 duv2)
 {
-    n = abs(n);
-    bvec3 b = greaterThanEqual(n.xxy, n.yzz);
-    return all(b.xy) ? PLANE_YZ : (b.z ? PLANE_XZ : PLANE_XY);
+    float det = duv1.x * duv2.y - duv1.y * duv2.x;
+    float invDet = 1/det;
+    vec3 dpdu = (dp1 * duv2.y - dp2 * duv1.y) * invDet;
+    vec3 dpdv = (-dp1 * duv2.x + dp2 * duv1.x) * invDet;
+    return mat3x3(dpdu, dpdv, cross(dpdu, dpdv));
 }
 
-vec2 magProj(vec3 v, vec3 n)
+// J^+ = (J^T * J)^-1 * J^T
+mat3x2 pseudoInverseJacobian(vec3 dp1, vec3 dp2, vec2 duv1, vec2 duv2)
 {
-    n = abs(n);
-    bvec3 b = greaterThanEqual(n.xxy, n.yzz);
-    return all(b.xy) ? v.yz : (b.z ? v.xz : v.xy);
+    float det = duv1.x * duv2.y - duv1.y * duv2.x;
+    float invDet = 1/det;
+    vec3 dpdu = (dp1 * duv2.y - dp2 * duv1.y) * invDet;
+    vec3 dpdv = (-dp1 * duv2.x + dp2 * duv1.x) * invDet;
+    mat2 JTJ = mat2(dot(dpdu, dpdu), dot(dpdu, dpdv),
+                    dot(dpdu, dpdv), dot(dpdv, dpdv));
+    mat2 invJTJ = inverse(JTJ);
+    mat3x2 JT = transpose(mat2x3(dpdu, dpdv));
+    return invJTJ * JT;
 }
 
 #endif // derivatives_h

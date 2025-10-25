@@ -41,20 +41,21 @@ std::unique_ptr<magma::UniqueImageView> createDebugCheckerboard(magma::lent_ptr<
 std::unique_ptr<magma::UniqueImageView> createDebugMipmap(magma::lent_ptr<magma::CommandBuffer> cmdBuffer,
     std::shared_ptr<magma::Allocator> allocator /* nullptr */)
 {
-    constexpr uint32_t size = 128;
+    constexpr uint32_t size = 512;
     const uint32_t mipLevels = (uint32_t)floor(log2(size)) + 1;
     auto image = std::make_unique<magma::Image2D>(cmdBuffer->getDevice(),
         VK_FORMAT_R8G8B8A8_UNORM, VkExtent3D{size, size, 1}, mipLevels, allocator);
     auto texels = std::make_unique<magma::SrcTransferBuffer>(cmdBuffer->getDevice(), image->getTexelCount() * sizeof(uint32_t), std::move(allocator));
     magma::map<uint8_t>(texels, [&image](uint8_t *data)
     {
-        const uint32_t mipColors[] = {0xFF0000FF, 0xFF00FFFF, 0xFF00FF00, 0xFFFFFF00, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFFFF, 0x00000000};
+        const uint32_t mipColors[] = {0xFF0000FF, 0xFF00FFFF, 0xFF00FF00, 0xFFFFFF00, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFFFF, 0xFFFFFFFF};
         VkDeviceSize bufferOffset = 0;
         for (uint32_t level = 0; level < image->getMipLevels(); ++level)
         {   // Fill each mip level with distinct color
             const uint32_t texelCount = image->getLevelTexelCount(level);
+            const uint32_t color = level < 7 ? mipColors[level] : 0x0;
             uint32_t *begin = (uint32_t *)(data + bufferOffset);
-            std::fill(begin, begin + texelCount, mipColors[level]);
+            std::fill(begin, begin + texelCount, color);
             bufferOffset += texelCount * sizeof(uint32_t);
         }
     });

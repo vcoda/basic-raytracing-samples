@@ -30,7 +30,7 @@ class RayDifferentialsApp : public VulkanRayTracingApp
     magma::AccelerationStructureInstances instance;
     std::unique_ptr<magma::ImageView> debugCheckerboard;
     std::unique_ptr<magma::ImageView> debugMipmap;
-    std::unique_ptr<magma::Sampler> trilinearSampler;
+    std::unique_ptr<magma::Sampler> sampler;
     std::unique_ptr<magma::AccelerationStructureInputBuffer> vertexBuffer;
     std::unique_ptr<magma::AccelerationStructureInputBuffer> indexBuffer;
     std::unique_ptr<magma::AccelerationStructureInstanceBuffer<magma::AccelerationStructureInstance>> instanceBuffer;
@@ -54,7 +54,8 @@ public:
         createGeometry();
         createAccelerationStructures();
         buildAccelerationStructures();
-        createTextures(1024, 2048);
+        createTextures();
+        createSampler();
         createUniformBuffer();
         setupDescriptorSet();
         setupPipeline();
@@ -164,8 +165,9 @@ public:
         MAGMA_ASSERT(features.buffer);
         if (features.buffer)
         {
-            tris = magma::AccelerationStructureIndexedTriangles(
-                vertexFormat, vertexBuffer.get(), indexType, indexBuffer.get(), sizeof(rapid::float4) * 2);
+            constexpr std::size_t vertexStride = sizeof(rapid::float4) * 2;
+            tris = magma::AccelerationStructureIndexedTriangles(vertexFormat, vertexBuffer.get(),
+                indexType, indexBuffer.get(), vertexStride);
         }
     }
 
@@ -208,11 +210,26 @@ public:
         magma::finish(cmdCompute, computeQueue);
     }
 
-    void createTextures(uint32_t width, uint32_t height)
+    void createTextures()
     {
-        debugCheckerboard = createDebugCheckerboard(cmdImageCopy, width, height, allocator);
+        debugCheckerboard = createDebugCheckerboard(cmdImageCopy, 1024, 2048, allocator);
         debugMipmap = createDebugMipmap(cmdImageCopy, allocator);
-        trilinearSampler = std::make_unique<magma::Sampler>(device, magma::sampler::magMinMipLinearClampToEdge);
+    }
+
+    void createSampler()
+    {
+        const VkPhysicalDeviceProperties properties = physicalDevice->getProperties();
+        const VkPhysicalDeviceLimits& limits = properties.limits;
+        switch ((int)floorf(limits.maxSamplerAnisotropy))
+        {
+        case 16: sampler = std::make_unique<magma::Sampler>(device, magma::sampler::magMinLinearMipAnisotropicClampToEdge16x); break;
+        case 8: sampler = std::make_unique<magma::Sampler>(device, magma::sampler::magMinLinearMipAnisotropicClampToEdge8x); break;
+        case 4: sampler = std::make_unique<magma::Sampler>(device, magma::sampler::magMinLinearMipAnisotropicClampToEdge4x); break;
+        case 2: sampler = std::make_unique<magma::Sampler>(device, magma::sampler::magMinLinearMipAnisotropicClampToEdge2x); break;
+        default: sampler = std::make_unique<magma::Sampler>(device, magma::sampler::magMinLinearMipAnisotropicClampToEdge1x); break;
+        }
+        //sampler = std::make_unique<magma::Sampler>(device, magma::sampler::magMinLinearMipNearestClampToEdge); // bi-linear
+        //sampler = std::make_unique<magma::Sampler>(device, magma::sampler::magMinMipLinearClampToEdge); // tri-linear
     }
 
     void createUniformBuffer()
@@ -228,8 +245,8 @@ public:
         setTable.view = viewUniforms;
         setTable.parameters = parameters;
         setTable.topLevel = topLevel;
-        setTable.checkerboard = {debugCheckerboard, trilinearSampler};
-        setTable.debugMipmap = {debugMipmap, trilinearSampler};
+        setTable.checkerboard = {debugCheckerboard, sampler};
+        setTable.debugMipmap = {debugMipmap, sampler};
         setTable.vertices = vertexBuffer;
         setTable.indices = indexBuffer;
         descriptorSet = std::make_unique<magma::DescriptorSet>(descriptorPool, setTable,
