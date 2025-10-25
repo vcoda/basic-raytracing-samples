@@ -199,7 +199,7 @@ This sample demonstrates anisotropic filtering for primary rays using ray differ
 Inigo Quilez in his article [Ray Differentials and Texturing (2015)](https://iquilezles.org/articles/filteringrm). Once we have those derivatives in world space,
 we need to map them to triangle's texture space. To solve this, we calculate inverse transform of [Jacobian matrix](https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant).
 Since the inverse() function for non-square matrices is not available in GLSL, this transform can be computed in two alternative ways. Jacobian  allows us 
-to transform position derivatives to explicit (u,v) coordinate derivatives that can be passed to built-in [textureGrad](https://registry.khronos.org/OpenGL-Refpages/gl4/html/textureGrad.xhtml) intrinsic. 
+to transform position derivatives to explicit (u,v) coordinate derivatives that can be consumed by [textureGrad](https://registry.khronos.org/OpenGL-Refpages/gl4/html/textureGrad.xhtml) intrinsic. 
 The hardware filtering performed by this call depends on the sampler configuration bound to texture object.
 
 ## Credits
