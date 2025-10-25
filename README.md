@@ -191,15 +191,16 @@ unique shading behaviour.
 
 
 ### [09 - Ray differentials](09-ray-differentials/)
-<img src="./screenshots/ray-differentials.png" height="128px" align="left">
-One of the problem with ray-tracing is that screen-space derivatives (dFdx, dFdy) are not available, making texture minification filter a no-op.
-Usually samples (e. g. RTX from Nvidia) simply select first LOD when sampling textures, thus rendering images without tri-linear or anisotropic filtration.
-This sample shows that tri-linear filtering is possible at least for primary rays. To achieve this, we compute directions of two adjacent rays
-during ray generation. In the hit shader, we compute 3D derivatives of these rays using formula provided by Inigo Quilez
-[ray differentias and texturing](https://iquilezles.org/articles/filteringrm). Once we have those differences in world space we need to map them
-to texture space. This is performed by projecting vector to triangle's magnitude axis. The shader implements two approaches for sampling the texture:
-using explicit gradients or calculating texture level-of-detail and blending two nearest LODs. While this approach may not be universal, it gives a good 
-starting point for further research in this field.
+<img src="./screenshots/09-lod.png" height="128px" align="left"><img src="./screenshots/09.png" height="128px" align="left">
+One of the problems with ray-tracing is that screen-space derivatives (dFdx, dFdy) are not available, making texture minification filter a no-op.
+In most samples (e. g. RTX from Nvidia) you will find first LOD when sampling textures, resulting in images rendered without any filtering.
+This sample demonstrates anisotropic filtering for primary rays using ray differentials. First, we compute the neighbor rays of our primary ray (offset by 
+1 pixel horizontal and vertically) in the ray generation shader. In the hit shader, we compute 3D derivatives of ray differentials using formula provided by 
+Inigo Quilez in his article [Ray Differentials and Texturing (2015)](https://iquilezles.org/articles/filteringrm). Once we have those derivatives in world space,
+we need to map them to triangle's texture space. To solve this, we calculate inverse transform of [Jacobian matrix](https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant).
+Since the inverse() function for non-square matrices is not available in GLSL, this transform can be computed in two alternative ways. Jacobian  allows us 
+to transform 3D derivatives to explicit (u,v) gradiends that can be passed to built-in [textureGrad](https://registry.khronos.org/OpenGL-Refpages/gl4/html/textureGrad.xhtml) intrinsic. 
+The hardware filtering performed by this call depends on the sampler configuration bound to texture object.
 
 ## Credits
 This framework uses a few third-party libraries:
