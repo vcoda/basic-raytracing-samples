@@ -4,9 +4,11 @@
 // https://iquilezles.org/articles/filteringrm/
 void dPdxy(vec3 rdx, vec3 rdy, vec3 n, out vec3 dpdx, out vec3 dpdy)
 {
-    float NdD = dot(n, gl_WorldRayDirectionEXT.xyz);
-    dpdx = gl_RayTmaxEXT * (rdx * NdD / dot(rdx, n) - gl_WorldRayDirectionEXT.xyz);
-    dpdy = gl_RayTmaxEXT * (rdy * NdD / dot(rdy, n) - gl_WorldRayDirectionEXT.xyz);
+    vec3 D = gl_WorldRayDirectionEXT.xyz;
+    vec3 Dt = D * gl_HitTEXT;
+    float NdDt = dot(n, D) * gl_HitTEXT;
+    dpdx = rdx * NdDt / dot(rdx, n) - Dt;
+    dpdy = rdy * NdDt / dot(rdy, n) - Dt;
 }
 
 mat3x3 jacobian(vec3 dp1, vec3 dp2, vec2 duv1, vec2 duv2)
