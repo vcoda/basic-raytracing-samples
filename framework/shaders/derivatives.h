@@ -30,7 +30,7 @@ mat3x3 jacobian(vec3 dp1, vec3 dp2, vec2 duv1, vec2 duv2)
 }
 
 // J^+ = (J^T * J)^-1 * J^T
-mat3x2 pseudoInverseJacobian(vec3 dp1, vec3 dp2, vec2 duv1, vec2 duv2)
+mat3x2 inverseJacobian(vec3 dp1, vec3 dp2, vec2 duv1, vec2 duv2)
 {
     float det = duv1.x * duv2.y - duv1.y * duv2.x;
     float invDet = 1/det;

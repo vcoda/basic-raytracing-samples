@@ -51,7 +51,7 @@ vec4 textureGrad2D(sampler2D image, vec2 uv, vec3 normal, vec3 rdx, vec3 rdy,
     vec3 dpdx, dpdy;
     dPdxy(rdx, rdy, normal, dpdx, dpdy);
 #ifdef PSEUDO_INVERSE_JACOBIAN
-    mat3x2 invJ = pseudoInverseJacobian(dp1, dp2, duv1, duv2);
+    mat3x2 invJ = inverseJacobian(dp1, dp2, duv1, duv2);
 #else
     mat3x3 J = jacobian(dp1, dp2, duv1, duv2);
     mat3x3 invJ = inverse(J);
