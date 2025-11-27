@@ -4,19 +4,18 @@
 // https://iquilezles.org/articles/filteringrm/
 void dPdxy(vec3 rdx, vec3 rdy, vec3 n, out vec3 dpdx, out vec3 dpdy)
 {
-    vec3 rd = gl_WorldRayDirectionEXT.xyz;
-    vec3 dt = rd * gl_HitTEXT;
-    float NdDt = dot(n, rd) * gl_HitTEXT;
-    dpdx = rdx * NdDt / dot(rdx, n) - dt;
-    dpdy = rdy * NdDt / dot(rdy, n) - dt;
+    vec3 rd = gl_WorldRayDirectionEXT;
+    float NdD = dot(n, rd);
+    dpdx = gl_HitTEXT * (rdx * NdD / dot(rdx, n) - rd);
+    dpdy = gl_HitTEXT * (rdy * NdD / dot(rdy, n) - rd);
 }
 
-void dPdxyOrtho(vec3 ro, vec3 rox, vec3 roy, vec3 n, out vec3 dpdx, out vec3 dpdy)
+void dPdxyOrtho(vec3 rox, vec3 roy, vec3 n, out vec3 dpdx, out vec3 dpdy)
 {
-    vec3 rd = gl_WorldRayDirectionEXT.xyz;
+    vec3 rdx = gl_WorldRayOriginEXT - rox;
+    vec3 rdy = gl_WorldRayOriginEXT - roy;
+    vec3 rd = gl_WorldRayDirectionEXT;
     rd /= dot(rd, n);
-    vec3 rdx = ro - rox;
-    vec3 rdy = ro - roy;
     dpdx = rdx - rd * dot(rdx, n);
     dpdy = rdy - rd * dot(rdy, n);
 }
